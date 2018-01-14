@@ -10,8 +10,8 @@ const P = require('puppeteer');
 // module variables
 const
   LOGIN_URL = 'https://www.betfair.com/sport',
-  EMAIL = 'simon@percayso.com',
-  PWD = 'Advantag3',
+  EMAIL = '',
+  PWD = '',
   EMAIL_SELECTOR = '#ssc-liu',
   PWD_SELECTOR = '#ssc-lipw',
   LOGIN_BTN_SELECTOR = '#ssc-lis',
@@ -71,23 +71,24 @@ async function bot() {
             horseName,
             matchedAmount;
           // check if back or lay
-          if(e.target.parentElement.parentElement.className == "back mv-bet-button back-button back-selection-button") {
+          if(e.target.offsetParent.className == 'bet-buttons back-cell last-back-cell') { // BACK
             betType = 'bet';
-            odds = e.target.innerText;
-            amount = e.target.nextElementSibling.innerText;
-          } else if(e.target.parentElement.parentElement.className == "lay mv-bet-button lay-button lay-selection-button") {
+            if(e.target.className == 'bet-button-price') {
+              odds = e.target.innerText;
+              amount = e.target.nextElementSibling.innerText;
+            } else if(e.target.className == 'bet-button-size') {
+              amount = e.target.innerText;
+              odds =  e.target.previousElementSibling.innerText;
+            }
+          } else if(e.target.offsetParent.className == 'bet-buttons lay-cell first-lay-cell') { // LAY
             betType = 'lay';
-            odds = e.target.innerText;
-            amount = e.target.nextElementSibling.innerText;
-          } else if(e.target.previousElementSibling.parentElement.parentElement.className == "back mv-bet-button back-button back-selection-button") {// check if 'back' price change
-            betType = 'bet';
-            amount = e.target.textContent;
-            odds = e.target.previousElementSibling.innerText
-          }
-          else if(e.target.previousElementSibling.parentElement.parentElement.className == "lay mv-bet-button lay-button lay-selection-button") {// check if 'lay' price change
-            betType = 'lay';
-            amount = e.target.textContent;
-            odds = e.target.previousElementSibling.innerText;
+            if(e.target.className == 'bet-button-price') {
+              odds = e.target.innerText;
+              amount = e.target.nextElementSibling.innerText;
+            } else if(e.target.className == 'bet-button-size') {
+              amount = e.target.innerText;
+              odds =  e.target.previousElementSibling.innerText;
+            }
           }
           if(!!betType && !!odds && !!amount) {
             horseName = e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0];
