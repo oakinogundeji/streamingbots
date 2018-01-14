@@ -16,7 +16,7 @@ const
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
   SIGN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  RACE_URL = 'https://smarkets.com/event/887113/sport/horse-racing/dundalk/2018/01/12/17:30',
+  RACE_URL = 'https://smarkets.com/event/887480/sport/horse-racing/kelso/2018/01/14/12:40',
   RACES_CONTAINER_SELECTOR = 'ul.contracts';
 
 
@@ -71,45 +71,46 @@ async function bot() {
           amount,
           horseName,
           matchedAmount;
-        // check if event from odds or price
+        // check if event from odds or price matched cols
         if(
           (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick')
           ||
           (e.target.parentElement.parentElement.className == 'level-0 tick')
         ) {
-          // check if odds
-          if(e.target.className == 'formatted-price numeric-value') {
-            odds = e.target.textContent;
-            // check if bet or lay
-            if(
-              e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png'
-            ) {
+          if(e.target.className == 'formatted-price numeric-value') {// odds
+            odds = e.target.innerText;
+            if(e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
               betType = 'lay';
-            } else {
+            } else if(e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
               betType = 'bet';
             }
-          } else if(e.target.className == 'formatted-currency numeric-value') {
-            amount = e.target.textContent;
-            odds = odds = e.target.parentElement.parentElement.children[0].children[1].textContent;
+            amount = e.target.parentElement.parentElement.parentElement.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.className == 'formatted-currency numeric-value') {// amount
+            amount = e.target.innerText;
             if(e.target.parentElement.parentElement.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
               betType = 'lay';
-            } else {
+            } else if(e.target.parentElement.parentElement.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
               betType = 'bet';
             }
+            odds = e.target.parentElement.parentElement.children[0].children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
           }
-          amount = e.target.parentElement.parentElement.parentElement.children[1].children[0].textContent;
-          const MATCHED_AMOUNT_SELECTOR = '#contract-collapse-6917893-control > div > div.contract-group-stats > span > span > span';
-          matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
-          const HORSE_NAME_SELECTOR = '#contract-collapse-6917893 > div > ul > li:nth-child(1) > div > div.contract-name-column > div.contract-info.-horse-racing > div.name-info > div.name';
-          horseName = document.querySelector(HORSE_NAME_SELECTOR).innerText;
-          console.log(`
-          odds: ${odds},
-          amount: ${amount},
-          betType: ${betType},
-          horseName: ${horseName},
-          matchedAmount: ${matchedAmount}
-          `
-        );
+          if(!!betType && !!odds && !!amount && !!horseName) {
+            const MATCHED_AMOUNT_SELECTOR = '#contract-collapse-6922068-control > div > div.contract-group-stats > span > span > span';
+            matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
+            const exchange = 'smarkets';
+            const data = {
+              betType,
+              odds,
+              amount,
+              horseName,
+              matchedAmount,
+              exchange
+            };
+            const output = JSON.stringify(data);
+            console.log(output);
+          }
         }
       }
     );
