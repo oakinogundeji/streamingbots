@@ -15,7 +15,7 @@ const
   EMAIL_SELECTOR = '#ssc-liu',
   PWD_SELECTOR = '#ssc-lipw',
   LOGIN_BTN_SELECTOR = '#ssc-lis',
-  RACE_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138936217',
+  RACE_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138963793',
   RACES_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper > bf-marketview-runners-list.runners-list-unpinned > div > div';
 
 
@@ -57,7 +57,7 @@ async function bot() {
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
   console.log('RACES_CONTAINER_SELECTOR found, continuing...');
-  // bind to races container and lsiten for updates to odds, bets etc
+  // bind to races container and lsiten for updates to oddsType, bets etc
   await page.$eval(RACES_CONTAINER_SELECTOR,
     target => {
       target.addEventListener('DOMSubtreeModified', function (e) {
@@ -65,43 +65,89 @@ async function bot() {
         if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
           // define variables
           let
-            odds,
+            oddsType,
             betType,
-            amount,
-            horseName,
-            matchedAmount;
+            priceType,
+            oddsValue,
+            priceValue,
+            horseName;
           // check if back or lay
-          if(e.target.offsetParent.className == 'bet-buttons back-cell last-back-cell') { // BACK
+          if(e.target.parentElement.parentElement.classList[0] == 'back') { // BACK
             betType = 'bet';
-            if(e.target.className == 'bet-button-price') {
-              odds = e.target.innerText;
-              amount = e.target.nextElementSibling.innerText;
-            } else if(e.target.className == 'bet-button-size') {
-              amount = e.target.innerText;
-              odds =  e.target.previousElementSibling.innerText;
+            if(e.target.offsetParent.className == 'bet-buttons back-cell last-back-cell') {
+              oddsType = 'back-0';
+              priceType = 'bet-price-0';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
+            } else if(e.target.offsetParent.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
+              oddsType = 'back-1';
+              priceType = 'bet-price-1';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
+            } else if(e.target.offsetParent.nextElementSibling.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
+              oddsType = 'back-2';
+              priceType = 'bet-price-2';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
             }
-          } else if(e.target.offsetParent.className == 'bet-buttons lay-cell first-lay-cell') { // LAY
+          } else if(e.target.parentElement.parentElement.classList[0] == 'lay') { // LAY
             betType = 'lay';
-            if(e.target.className == 'bet-button-price') {
-              odds = e.target.innerText;
-              amount = e.target.nextElementSibling.innerText;
-            } else if(e.target.className == 'bet-button-size') {
-              amount = e.target.innerText;
-              odds =  e.target.previousElementSibling.innerText;
+            if(e.target.offsetParent.className == 'bet-buttons lay-cell first-lay-cell') {
+              oddsType = 'lay-0';
+              priceType = 'lay-price-0';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
+            } else if(e.target.offsetParent.nextElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
+              oddsType = 'lay-1';
+              priceType = 'lay-price-1';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
+            } else if(e.target.offsetParent.nextElementSibling.nextElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
+              oddsType = 'lay-2';
+              priceType = 'lay-price-2';
+              if(e.target.className == 'bet-button-price') {
+                oddsValue = e.target.innerText;
+                priceValue = e.target.nextElementSibling.innerText;
+              } else if(e.target.className == 'bet-button-size') {
+                priceValue = e.target.innerText;
+                oddsValue = e.target.previousElementSibling.innerText;
+              }
             }
           }
-          if(!!betType && !!odds && !!amount) {
+          if(!!betType && !!oddsType && !!priceType && !!oddsValue && !!priceValue) {
             horseName = e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0];
-            const MATCHED_AMOUNT_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.mv-sticky-header > bf-marketview-header-wrapper > div > div > mv-header > div > div > div.mv-secondary-section > div > div > span.total-matched';
-            matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
-            const exchange = 'betfair';
             const data = {
               betType,
-              odds,
-              amount,
-              horseName,
-              matchedAmount,
-              exchange
+              oddsType,
+              priceType,
+              oddsValue,
+              priceValue,
+              horseName
             };
             const output = JSON.stringify(data);
             console.log(output);
