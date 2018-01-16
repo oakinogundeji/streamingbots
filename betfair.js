@@ -74,7 +74,7 @@ async function bot() {
           // check if back or lay
           if(e.target.parentElement.parentElement.classList[0] == 'back') { // BACK
             betType = 'bet';
-            if(e.target.offsetParent.className == 'bet-buttons back-cell last-back-cell') {
+            if(e.target.parentElement.parentElement.className == 'back mv-bet-button back-button back-selection-button') {
               oddsType = 'back-0';
               priceType = 'bet-price-0';
               if(e.target.className == 'bet-button-price') {
@@ -84,7 +84,7 @@ async function bot() {
                 priceValue = e.target.innerText;
                 oddsValue = e.target.previousElementSibling.innerText;
               }
-            } else if(e.target.offsetParent.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
+            } else if(e.target.parentElement.parentElement.parentElement.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
               oddsType = 'back-1';
               priceType = 'bet-price-1';
               if(e.target.className == 'bet-button-price') {
@@ -94,7 +94,7 @@ async function bot() {
                 priceValue = e.target.innerText;
                 oddsValue = e.target.previousElementSibling.innerText;
               }
-            } else if(e.target.offsetParent.nextElementSibling.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
+            } else if(e.target.parentElement.parentElement.parentElement.nextElementSibling.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
               oddsType = 'back-2';
               priceType = 'bet-price-2';
               if(e.target.className == 'bet-button-price') {
@@ -107,7 +107,7 @@ async function bot() {
             }
           } else if(e.target.parentElement.parentElement.classList[0] == 'lay') { // LAY
             betType = 'lay';
-            if(e.target.offsetParent.className == 'bet-buttons lay-cell first-lay-cell') {
+            if(e.target.parentElement.parentElement.className == 'lay mv-bet-button lay-button lay-selection-button') {
               oddsType = 'lay-0';
               priceType = 'lay-price-0';
               if(e.target.className == 'bet-button-price') {
@@ -117,7 +117,7 @@ async function bot() {
                 priceValue = e.target.innerText;
                 oddsValue = e.target.previousElementSibling.innerText;
               }
-            } else if(e.target.offsetParent.nextElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
+            } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
               oddsType = 'lay-1';
               priceType = 'lay-price-1';
               if(e.target.className == 'bet-button-price') {
@@ -127,7 +127,7 @@ async function bot() {
                 priceValue = e.target.innerText;
                 oddsValue = e.target.previousElementSibling.innerText;
               }
-            } else if(e.target.offsetParent.nextElementSibling.nextElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
+            } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') {
               oddsType = 'lay-2';
               priceType = 'lay-price-2';
               if(e.target.className == 'bet-button-price') {
