@@ -15,7 +15,7 @@ const
   EMAIL_SELECTOR = '#ssc-liu',
   PWD_SELECTOR = '#ssc-lipw',
   LOGIN_BTN_SELECTOR = '#ssc-lis',
-  RACE_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138901494',
+  RACE_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138936217',
   RACES_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper > bf-marketview-runners-list.runners-list-unpinned > div > div';
 
 
