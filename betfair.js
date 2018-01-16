@@ -75,7 +75,7 @@ async function bot() {
           if(e.target.parentElement.parentElement.classList[0] == 'back') { // BACK
             betType = 'bet';
             if(e.target.parentElement.parentElement.className == 'back mv-bet-button back-button back-selection-button') {
-              oddsType = 'back-0';
+              oddsType = 'bet-0';
               priceType = 'bet-price-0';
               if(e.target.className == 'bet-button-price') {
                 oddsValue = e.target.innerText;
@@ -85,7 +85,7 @@ async function bot() {
                 oddsValue = e.target.previousElementSibling.innerText;
               }
             } else if(e.target.parentElement.parentElement.parentElement.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
-              oddsType = 'back-1';
+              oddsType = 'bet-1';
               priceType = 'bet-price-1';
               if(e.target.className == 'bet-button-price') {
                 oddsValue = e.target.innerText;
@@ -95,7 +95,7 @@ async function bot() {
                 oddsValue = e.target.previousElementSibling.innerText;
               }
             } else if(e.target.parentElement.parentElement.parentElement.nextElementSibling.nextElementSibling.className == 'bet-buttons back-cell last-back-cell') {
-              oddsType = 'back-2';
+              oddsType = 'bet-2';
               priceType = 'bet-price-2';
               if(e.target.className == 'bet-button-price') {
                 oddsValue = e.target.innerText;
