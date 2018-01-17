@@ -1,13 +1,16 @@
 'use strict';
 //=============================================================================
 // dependencies
-const {spawn} = require('child_process');
+const
+  {spawn} = require('child_process'),
+  BETFAIR_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138963964',
+  SMARKETS_URL = 'https://smarkets.com/event/888379/sport/horse-racing/lingfield/2018/01/17/12:10';
 
 // spawn the BOTS
 
 const
-  BETFAIR = spawn('node', ['./betfair.js']),
-  SMARKETS = spawn('node', ['./smarkets.js']);
+  BETFAIR = spawn('node', ['./betfair.js', BETFAIR_URL]),
+  SMARKETS = spawn('node', ['./smarkets.js', SMARKETS_URL]);
 
 // listen to data
 

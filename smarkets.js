@@ -16,7 +16,7 @@ const
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
   SIGN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  RACE_URL = 'https://smarkets.com/event/888379/sport/horse-racing/lingfield/2018/01/17/12:10',
+  RACE_URL = process.argv[2],
   RACES_CONTAINER_SELECTOR = 'ul.contracts';
 
 
