@@ -56,7 +56,7 @@ async function bot() {
   await page.waitForSelector(RACES_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
-  console.log('RACES_CONTAINER_SELECTOR found, continuing...');
+  //console.log('RACES_CONTAINER_SELECTOR found, continuing...');
   // bind to races container and lsiten for updates to oddsType, bets etc
   await page.$eval(RACES_CONTAINER_SELECTOR,
     target => {
