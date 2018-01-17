@@ -1,16 +1,32 @@
 'use strict';
+if(process.env.NODE_ENV != 'production') {
+  require('dotenv').config();
+}
 //=============================================================================
 // dependencies
 const
   {spawn} = require('child_process'),
-  BETFAIR_URL = 'https://www.betfair.com/exchange/plus/horse-racing/market/1.138963964',
-  SMARKETS_URL = 'https://smarkets.com/event/888379/sport/horse-racing/lingfield/2018/01/17/12:10';
+  EMAIL = process.env.EMAIL,
+  BETFAIR_PWD = process.env.BETFAIR_PWD,
+  SMARKETS_PWD = process.env.SMARKETS_PWD,
+  BETFAIR_URL = process.env.BETFAIR_URL,
+  SMARKETS_URL = process.env.SMARKETS_URL,
+  BETFAIR_ARGS = JSON.stringify({
+    URL: BETFAIR_URL,
+    EMAIL: EMAIL,
+    PWD: BETFAIR_PWD
+  }),
+  SMARKETS_ARGS = JSON.stringify({
+    URL: SMARKETS_URL,
+    EMAIL: EMAIL,
+    PWD: BETFAIR_PWD
+  }) ;
 
 // spawn the BOTS
 
 const
-  BETFAIR = spawn('node', ['./betfair.js', BETFAIR_URL]),
-  SMARKETS = spawn('node', ['./smarkets.js', SMARKETS_URL]);
+  BETFAIR = spawn('node', ['./betfair.js', BETFAIR_ARGS]),
+  SMARKETS = spawn('node', ['./smarkets.js', SMARKETS_ARGS]);
 
 // listen to data
 

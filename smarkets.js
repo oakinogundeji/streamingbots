@@ -10,13 +10,14 @@ const P = require('puppeteer');
 // module variables
 const
   HOMEPAGE_URL = 'https://smarkets.com/',
-  EMAIL = '',
-  PWD = '',
+  BOT_PARAMS = JSON.parse(process.argv[2]),
+  EMAIL = BOT_PARAMS.EMAIL,
+  PWD = BOT_PARAMS.PWD,
   ACCESS_LOGIN_SELECTOR = '#right-nav-section-login > div.right-nav-section-content > a:nth-child(2)',
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
   SIGN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  RACE_URL = process.argv[2],
+  RACE_URL = BOT_PARAMS.URL,
   RACES_CONTAINER_SELECTOR = 'ul.contracts';
 
 
