@@ -16,7 +16,7 @@ const
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
   SIGN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  RACE_URL = 'https://smarkets.com/event/887113/sport/horse-racing/dundalk/2018/01/12/17:30',
+  RACE_URL = 'https://smarkets.com/event/888379/sport/horse-racing/lingfield/2018/01/17/12:10',
   RACES_CONTAINER_SELECTOR = 'ul.contracts';
 
 
@@ -33,7 +33,7 @@ async function bot() {
   await page.setViewport({width: 1366, height: 768});
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
-  // navigate to smarkets homepage
+  /*// navigate to smarkets homepage
   await page.goto(HOMEPAGE_URL, {
     waitUntil: 'networkidle0'
   });
@@ -49,7 +49,7 @@ async function bot() {
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
   await page.waitFor(2*1000);
   // click login button
-  await page.click(SIGN_BTN_SELECTOR);
+  await page.click(SIGN_BTN_SELECTOR);*/
   // navigate to RACE_URL
   await page.goto(RACE_URL, {
     waitUntil: 'networkidle0'
@@ -66,50 +66,103 @@ async function bot() {
       target.addEventListener('DOMSubtreeModified', function (e) {
         // define variables
         let
-          odds,
           betType,
-          amount,
-          horseName,
-          matchedAmount;
-        // check if event from odds or price
-        if(
-          (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick')
-          ||
-          (e.target.parentElement.parentElement.className == 'level-0 tick')
-        ) {
-          // check if odds
-          if(e.target.className == 'formatted-price numeric-value') {
-            odds = e.target.textContent;
-            // check if bet or lay
-            if(
-              e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png'
-            ) {
-              betType = 'lay';
-            } else {
-              betType = 'bet';
-            }
-          } else if(e.target.className == 'formatted-currency numeric-value') {
-            amount = e.target.textContent;
-            odds = odds = e.target.parentElement.parentElement.children[0].children[1].textContent;
-            if(e.target.parentElement.parentElement.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
-              betType = 'lay';
-            } else {
-              betType = 'bet';
-            }
+          oddsType,
+          priceType,
+          oddsValue,
+          priceValue,
+          horseName;
+        // check if event from odds or price matched cols
+        if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') {// ODDS BACK
+          betType = 'bet';
+          if(e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            oddsType = 'bet-0';
+            priceType = 'bet-price-0';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            oddsType = 'bet-1';
+            priceType = 'bet-price-1';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            oddsType = 'bet-2';
+            priceType = 'bet-price-2';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
           }
-          amount = e.target.parentElement.parentElement.parentElement.children[1].children[0].textContent;
-          const MATCHED_AMOUNT_SELECTOR = '#contract-collapse-6917893-control > div > div.contract-group-stats > span > span > span';
-          matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
-          const HORSE_NAME_SELECTOR = '#contract-collapse-6917893 > div > ul > li:nth-child(1) > div > div.contract-name-column > div.contract-info.-horse-racing > div.name-info > div.name';
-          horseName = document.querySelector(HORSE_NAME_SELECTOR).innerText;
-          console.log(`
-          odds: ${odds},
-          amount: ${amount},
-          betType: ${betType},
-          horseName: ${horseName},
-          matchedAmount: ${matchedAmount}
-          `
-        );
+        } else if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') {// ODDS LAY
+          betType = 'lay';
+          if(e.target.parentElement.parentElement.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            oddsType = 'lay-0';
+            priceType = 'lay-price-0';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            oddsType = 'lay-1';
+            priceType = 'lay-price-1';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.parentElement.previousElementSibling.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            oddsType = 'lay-2';
+            priceType = 'lay-price-2';
+            oddsValue = e.target.innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          }
+        } else if(e.target.parentElement.parentElement.parentElement.className == 'prices offers') {
+          betType = 'bet';
+          if(e.target.parentElement.previousElementSibling.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            priceType = 'bet-price-0';
+            oddsType = 'bet-0';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            priceType = 'bet-price-1';
+            oddsType = 'bet-1';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.previousElementSibling.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-green-no-flash.png') {
+            priceType = 'bet-price-2';
+            oddsType = 'bet-2';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          }
+        } else if(e.target.parentElement.parentElement.parentElement.className == 'prices bids') {
+          betType = 'lay';
+          if(e.target.parentElement.previousElementSibling.children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            priceType = 'lay-price-0';
+            oddsType = 'lay-0';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            priceType = 'lay-price-1';
+            oddsType = 'lay-1';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          } else if(e.target.parentElement.parentElement.previousElementSibling.previousElementSibling.children[0].children[0].currentSrc == 'https://smarkets.com/static/img/price-dark-blue-no-flash.png') {
+            priceType = 'lay-price-2';
+            oddsType = 'lay-2';
+            priceValue = e.target.innerText;
+            oddsValue = e.target.parentElement.previousElementSibling.children[1].innerText;
+            horseName = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].innerText.split('\n')[0];
+          }
+        }
+        if(!!betType && !!oddsType && !!priceType && !!oddsValue && !!priceValue && !!horseName) {
+          const data = {
+            betType,
+            oddsType,
+            priceType,
+            oddsValue,
+            priceValue,
+            horseName
+          };
+          const output = JSON.stringify(data);
+          console.log(output);
         }
       }
     );
