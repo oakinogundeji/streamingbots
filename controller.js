@@ -7,6 +7,7 @@ if(process.env.NODE_ENV != 'production') {
 const
   {spawn} = require('child_process'),
   P = require('puppeteer'),
+  Promise = require('bluebird'),
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
@@ -48,7 +49,6 @@ async function getRunners() {
     waitUntil: 'networkidle0'
   });
   // ensure race container selector available
-  //console.log(`${RACES_CONTAINER_SELECTOR}`);
   await page.waitForSelector(SMARKETS_RACES_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
@@ -68,6 +68,8 @@ async function getRunners() {
     });
     return runnersList;
   });
+  await browser.close();
+  return Promise.resolve(true);
 }
 
 function spawnBots() {
@@ -81,69 +83,72 @@ function spawnBots() {
 
   BETFAIR.stdout.on('data', data => {
     let dataObj = JSON.parse(data);
-    return console.log(dataObj);
+    console.log(dataObj);
+    return saveData(DB_CONN, 'betfair', dataObj);
   });
   BETFAIR.stderr.on('error', err => console.error(`BETFAIR err: ${err}`));
   BETFAIR.on('close', () => console.log('BETFAIR BOT closed...'));
 
   SMARKETS.stdout.on('data', data => {
     let dataObj = JSON.parse(data);
-    return console.log(dataObj);
+    console.log(dataObj);
+    return saveData(DB_CONN, 'smarkets', dataObj);
   });
   SMARKETS.stderr.on('error', err => console.error(`SMARKETS err: ${err}`));
   SMARKETS.on('close', () => console.log('SMARKETS BOT closed...'));
 }
 
-/*async function saveData(DB_CONN, exchange, data) {
+async function saveData(DB_CONN, exchange, data) {
 
   // check which exchange is reporting the data
   if(exchange == 'betfair') {
-    return saveBetfairData(DB_CONN, exchange, data);
+    return saveBetfairData(DB_CONN, data);
   } else if(exchange == 'smarkets') {
-    return saveSmarketsData(DB_CONN, exchange, data);
+    return saveSmarketsData(DB_CONN, data);
   }
 }
 
-async function saveBetfairData(DB_CONN, exchange, data) {
-  // check if runner exists in race card
-  let Racecard = await DB_CONN.collection('races').findOne({
-    raceLabel: RACE_LABEL
-  });
-  console.log('Racecard data...');
-  if(Racecard.raceLabel == RACE_LABEL) {
-    const runner = data.horseName;
-    // raceCard doc found, check if field matching runner exists in
-    // runners attrib
-    if(runner in Racecard.runners) {
-      // runner already exist add the data to it
-      console.log(`${runner} already exists in raceCard`);
-      const nestedField = 'runners.' + runner;
-      console.log(`nestedField: ${nestedField}`);
-      let addedNewData = await DB_CONN.collection('races').findOneAndUpdate({
-        raceLabel: RACE_LABEL}, {$push: {
-          nestedField: data
-        }});
-      console.log('addedNewData...');
-      return console.log(addedNewData);
-    } else {
-      console.log(`${runner} does NOT exist in racecard`);
-      // create new field on racecard.runners
-      const nestedField = 'runners.' + runner;
-      console.log(`nestedField: ${nestedField}`);
-      let createdNewField = await DB_CONN.collection('races').findOneAndUpdate({
-        raceLabel: RACE_LABEL}, {$set: {
-          nestedField: []
-        }});
-      console.log(`createdNewField:`);
-      return console.log(createdNewField);
-    }
-    return console.log('Racecard found...');
+async function saveBetfairData(DB_CONN, data) {
+  // extract horseName
+  const
+    runner = data.horseName,
+    nestedField = 'runners.' + runner + '.betfair';
+  // delete horseName from data
+  delete data.horseName;
+  // push data obj into 'betfair' array
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+    raceLabel: RACE_LABEL}, {$push: {
+      [nestedField]: data
+    }});
+  if(addNewData.ok) {
+    console.log('addNewData betfair...');
+    return Promise.resolve(true);
   } else {
-    return console.error('Racecard NOT found...');
+    const newErr = new Error(`failed to update ${runner}`);
+    return Promise.reject(newErr);
   }
 }
 
-async function saveSmarketsData(DB_CONN, exchange, data) {}*/
+async function saveSmarketsData(DB_CONN, data) {
+  // extract horseName
+  const
+    runner = data.horseName,
+    nestedField = 'runners.' + runner + '.smarkets';
+  // delete horseName from data
+  delete data.horseName;
+  // push data obj into 'betfair' array
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+    raceLabel: RACE_LABEL}, {$push: {
+      [nestedField]: data
+    }});
+  if(addNewData.ok) {
+    console.log('addNewData smarkets...');
+    return Promise.resolve(true);
+  } else {
+    const newErr = new Error(`failed to update ${runner}`);
+    return Promise.reject(newErr);
+  }
+}
 // connect to DBURL
 let DB_CONN;
 
@@ -167,17 +172,35 @@ connectToDB()
     const db = client.db(DB);
     return db;
   })
-  .then(async (db) => {
-    // create initial race card
-    console.log(`RACE_LABEL: ${RACE_LABEL}`);
-
+  .then(db => {
     DB_CONN = db;
-
+    return Promise.resolve(true);
+  })
+  .then(ok => {
+    console.log('getting runners...');
+    return getRunners();
+  })
+  .then(ok => {
+    console.log('runnersList...');
+    console.log(runnersList);
+    return Promise.resolve(true);
+  })
+  .then(async (ok) => {
+    // create initial race card
     let raceDoc = {
       raceLabel: RACE_LABEL,
       runners: {},
       winner: ''
     };
+
+    runnersList.forEach(runner => raceDoc.runners[runner] = {
+      betfair: [],
+      smarkets: []
+    });
+
+    console.log('final raceDoc..');
+
+    console.log(raceDoc);
 
     // confirm that raceCard does not yet exist on dBase
     let alreadyExists = await DB_CONN.collection('races').findOne(raceDoc);
@@ -189,8 +212,8 @@ connectToDB()
         console.log('race object created...');
         return Promise.resolve(true);
       } else {
-        const newErr = new Error('Race boject NOT created');
-        return Promise.reject(newErr.msg);
+        const newErr = new Error('Race object NOT created');
+        return Promise.reject(newErr);
       }
     } else {
       console.log('race object already exists...');
@@ -199,15 +222,8 @@ connectToDB()
   })
   .then(ok => {
     console.log('all good...');
-
-    //console.log('spawning streaming bots...');
-    console.log('getting runners...');
-    return getRunners()
-    //return spawnBots();
-  })
-  .then(ok => {
-    console.log('runnersList...');
-    console.log(runnersList);
+    console.log('spawning streaming bots...');
+    return spawnBots();
   })
   .catch(err => console.error(err))
 
