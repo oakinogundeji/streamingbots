@@ -34,7 +34,7 @@ async function bot() {
   await page.setViewport({width: 1366, height: 768});
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
-  /*// navigate to betfair homepage
+  // navigate to betfair homepage
   await page.goto(LOGIN_URL, {
     waitUntil: 'networkidle0'
   });
@@ -48,7 +48,7 @@ async function bot() {
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
   await page.waitFor(2*1000);
   // click login button
-  await page.click(LOGIN_BTN_SELECTOR);*/
+  await page.click(LOGIN_BTN_SELECTOR);
   // navigate to RACE_URL
   await page.goto(RACE_URL, {
     waitUntil: 'networkidle0'
@@ -56,11 +56,9 @@ async function bot() {
   // add tag for moment.js
   await page.addScriptTag({url: 'https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js'});
   // ensure race container selector available
-  //console.log(`${RACES_CONTAINER_SELECTOR}`);
   await page.waitForSelector(RACES_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
-  //console.log('RACES_CONTAINER_SELECTOR found, continuing...');
   // bind to races container and lsiten for updates to , bets etc
   await page.$eval(RACES_CONTAINER_SELECTOR,
     (target, RUNNER) => {

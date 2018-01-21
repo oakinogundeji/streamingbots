@@ -246,10 +246,8 @@ connectToDB()
   .then(ok => {
     console.log('all good...');
     console.log('spawning streaming bots...');
-    //return spawnBots();
     // spawn 2 bots per runner
     return runnersList.forEach(runner => spawnBots(runner));
-    //return spawnBots(runnersList[0]);
   })
   .catch(err => console.error(err))
 
