@@ -86,7 +86,7 @@ function spawnBots(RUNNER) {
   B_ARGS = JSON.stringify(B_ARGS);
   S_ARGS = JSON.stringify(S_ARGS);
   // spawn the BOTS
-  console.log(`spawing 2 bots for ${RUNNER}`);
+  console.log(`spawning 2 bots for ${RUNNER}`);
 
   const
     BETFAIR = spawn('node', ['./betfair.js', B_ARGS]),
