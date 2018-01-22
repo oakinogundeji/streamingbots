@@ -25,7 +25,8 @@ const
 async function bot() {
   // instantiate browser
   const browser = await P.launch({
-    headless: false
+    headless: false,
+    timeout: 180000
   });
   // create blank page
   const page = await browser.newPage();
@@ -35,7 +36,8 @@ async function bot() {
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
   // navigate to betfair homepage
   await page.goto(LOGIN_URL, {
-    waitUntil: 'networkidle0'
+    waitUntil: 'networkidle0',
+    timeout: 180000
   });
   // wait for EMAIL and PWD selectors to be available
   await page.waitForSelector(EMAIL_SELECTOR);
@@ -45,13 +47,15 @@ async function bot() {
   await page.waitFor(2*1000);
   //enter password
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
-  console.log('filled in creds from betfair...');
-  /*await page.waitFor(2*1000);
+  process.send({msg: `RUNNER: ${RUNNER}, PWD: ${PWD}, EMAIL: ${EMAIL}, RACE_URL: ${RACE_URL} from betfair...`});
+  /*//return console.log('filled creds from betfair...');
+  await page.waitFor(2*1000);
   // click login button
   await page.click(LOGIN_BTN_SELECTOR);
   // navigate to RACE_URL
   await page.goto(RACE_URL, {
-    waitUntil: 'networkidle0'
+    waitUntil: 'networkidle0',
+    timeout: 180000
   });
   // add tag for moment.js
   await page.addScriptTag({url: 'https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js'});

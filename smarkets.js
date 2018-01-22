@@ -11,7 +11,7 @@ const P = require('puppeteer');
 const
   HOMEPAGE_URL = 'https://smarkets.com/',
   EMAIL = process.env.EMAIL,
-  PWD = process.env.PWD +'@',
+  PWD = process.env.PWD,
   RUNNER = process.env.RUNNER,
   RACE_URL = process.env.URL,
   ACCESS_LOGIN_SELECTOR = '#right-nav-section-login > div.right-nav-section-content > a:nth-child(2)',
@@ -26,7 +26,8 @@ const
 async function bot() {
   // instantiate browser
   const browser = await P.launch({
-    headless: false
+    headless: false,
+    timeout: 180000
   });
   // create blank page
   const page = await browser.newPage();
@@ -36,7 +37,8 @@ async function bot() {
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
   // navigate to smarkets homepage
   await page.goto(HOMEPAGE_URL, {
-    waitUntil: 'networkidle0'
+    waitUntil: 'networkidle0',
+    timeout: 180000
   });
   // click the button to access login
   await page.click(ACCESS_LOGIN_SELECTOR);
@@ -48,13 +50,15 @@ async function bot() {
   await page.waitFor(2*1000);
   //enter password
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
-  console.log('filled in creds from smarkets...');
-  /*await page.waitFor(2*1000);
+  process.send({msg: `RUNNER: ${RUNNER}, PWD: ${PWD}, EMAIL: ${EMAIL}, RACE_URL: ${RACE_URL} from smarkets...`});
+  /*//return console.log('filled creds from smarkets...');
+  await page.waitFor(2*1000);
   // click login button
   await page.click(SIGN_BTN_SELECTOR);
   // navigate to RACE_URL
   await page.goto(RACE_URL, {
-    waitUntil: 'networkidle0'
+    waitUntil: 'networkidle0',
+    timeout: 180000
   });
   // add tag for moment.js
   await page.addScriptTag({url: 'https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js'});

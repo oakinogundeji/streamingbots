@@ -5,10 +5,10 @@ if(process.env.NODE_ENV != 'production') {
 //=============================================================================
 // dependencies
 const
-  {spawn} = require('child_process'),
   P = require('puppeteer'),
   Promise = require('bluebird'),
   MongoClient = require('mongodb').MongoClient,
+  marketController = require('./market-controller'),
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
   EMAIL = process.env.EMAIL,
@@ -19,18 +19,6 @@ const
   SMARKETS_RACES_CONTAINER_SELECTOR = 'ul.contracts',
   SMARKETS_RUNNERS_SELECTOR = 'div.contract-info.-horse-racing',
   SMARKETS_RACE_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span';
-  // we're using string for the args so the values can be copied
-  // this avoids issues from mutations if passing objects directly
-  /*BETFAIR_ARGS = JSON.stringify({
-    URL: BETFAIR_URL,
-    EMAIL: EMAIL,
-    PWD: BETFAIR_PWD
-  }),
-  SMARKETS_ARGS = JSON.stringify({
-    URL: SMARKETS_URL,
-    EMAIL: EMAIL,
-    PWD: BETFAIR_PWD
-  });*/
 let
   runnersList,
   RACE_LABEL;
@@ -39,7 +27,8 @@ let
 async function getRunners() {
   // instantiate browser
   const browser = await P.launch({
-    headless: false
+    headless: false,
+    timeout: 180000
   });
   // create blank page
   const page = await browser.newPage();
@@ -48,7 +37,8 @@ async function getRunners() {
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
   await page.goto(SMARKETS_URL, {
-    waitUntil: 'networkidle0'
+    waitUntil: 'networkidle0',
+    timeout: 180000
   });
   // ensure race container selector available
   await page.waitForSelector(SMARKETS_RACES_CONTAINER_SELECTOR);
@@ -72,63 +62,6 @@ async function getRunners() {
   });
   await browser.close();
   return Promise.resolve(true);
-}
-
-function spawnMarketControllers(RUNNER) {
-  // create local copies of ARGS
-  /*let
-    B_ARGS = JSON.parse(BETFAIR_ARGS),
-    S_ARGS = JSON.parse(SMARKETS_ARGS);*/
-  // stringify ARGS in order to pass to market controller child process
-/*const MARKET_CONTROLLER_ARGS_OBJ = {
-    betfair: B_ARGS,
-    smarkets: S_ARGS,
-    dburl: DBURL,
-    db: DB,
-    runner: RUNNER
-  };*/
-  const MARKET_CONTROLLER_ARGS = {
-    betfair: {
-      URL: BETFAIR_URL,
-      EMAIL: EMAIL,
-      PWD: BETFAIR_PWD
-    },
-    smarkets: {
-      URL: SMARKETS_URL,
-      EMAIL: EMAIL,
-      PWD: SMARKETS_PWD
-    },
-    dburl: DBURL,
-    db: DB,
-    runner: RUNNER
-  };
-  //const MARKET_CONTROLLER_ARGS = JSON.stringify(MARKET_CONTROLLER_ARGS_OBJ);
-  // spawn the Market Controllers
-  console.log(`spawning Market Controller for ${RUNNER}`);
-
-  /*console.log(`typeof MARKET_CONTROLLER_ARGS: ${typeof MARKET_CONTROLLER_ARGS}`);
-
-  console.log(`MARKET_CONTROLLER_ARGS: ${MARKET_CONTROLLER_ARGS}`);*/
-
-  const MARKET_CONTROLLER = spawn('node', ['./market-controller.js'], {env: MARKET_CONTROLLER_ARGS});
-
-  // monitor controller for errors or close events
-
-  MARKET_CONTROLLER.stdout.on('data', data => {
-    return console.log(data.toString());
-  });
-
-  MARKET_CONTROLLER.stderr.on('data', err => {
-    console.error(`MARKET_CONTROLLER for ${RUNNER} err:`);
-    return console.error(err.toString());
-  });
-  MARKET_CONTROLLER.on('close', code => {
-    if(code < 1) {
-      return console.log(`MARKET_CONTROLLER for ${RUNNER} closed normally...`);
-    } else {
-      return console.error(`MARKET_CONTROLLER for ${RUNNER} closed abnormally...`);
-    }
-  });
 }
 
 // connect to DBURL
@@ -204,10 +137,10 @@ connectToDB()
   })
   .then(ok => {
     console.log('all good...');
-    console.log('spawning market controllers...');
+    console.log('launching market controllers...');
     // spawn 1 market controller per runner
-    //return runnersList.forEach(runner => spawnMarketControllers(runner));
-    return spawnMarketControllers(runnersList[0]);
+    //return runnersList.forEach(runner => marketController(runner));
+    return marketController(runnersList[0], DB_CONN);
   })
   .catch(err => console.error(err))
 
