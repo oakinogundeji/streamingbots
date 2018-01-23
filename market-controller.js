@@ -3,50 +3,32 @@
 module.exports = function (RUNNER, DB_CONN) {
   const
     {spawn} = require('child_process'),
-    Promise = require('bluebird'),
-    EMAIL = process.env.EMAIL,
-    BETFAIR_PWD = process.env.BETFAIR_PWD,
-    SMARKETS_PWD = process.env.SMARKETS_PWD,
-    BETFAIR_URL = process.env.BETFAIR_URL,
-    SMARKETS_URL = process.env.SMARKETS_URL;
-
+    Promise = require('bluebird');
 
   // helper functions
 
   function spawnBots(RUNNER) {
-    console.log(`creating market controller for ${RUNNER}`);
-    // setup
-    const
-      B_ARGS = {
-        URL: BETFAIR_URL,
-        EMAIL: EMAIL,
-        PWD: BETFAIR_PWD,
-        RUNNER: RUNNER
-      },
-      S_ARGS = {
-        URL: SMARKETS_URL,
-        EMAIL: EMAIL,
-        PWD: SMARKETS_PWD,
-        RUNNER: RUNNER
-      };
-
     // spawn the BOTS
     console.log(`spawning 2 bots for ${RUNNER}`);
 
-    /*const
-      BETFAIR = spawn('node', ['./betfair.js'], {env: B_ARGS}),
-      SMARKETS = spawn('node', ['./smarkets.js'], {env: S_ARGS});
+  const
+    BETFAIR = spawn('node', ['./betfair.js', RUNNER]),
+    SMARKETS = spawn('node', ['./smarkets.js', RUNNER]);
 
-    // listen to data from streaming BOTs
+      // listen for data
 
     BETFAIR.stdout.on('data', data => {
       console.log(`data from betfair bot for ${RUNNER}`);
-      return console.log(data);
+      return console.log(data.toString());
       //return saveData(DB_CONN, 'betfair', RUNNER, data);
     });
     BETFAIR.stderr.on('data', err => {
-      console.error(`BETFAIR err:`);
+      console.error(`BETFAIR err for ${RUNNER}...`);
       return console.error(err.toString());
+    });
+    BETFAIR.on('error', err => {
+      console.error(`BETFAIR CP err for ${RUNNER}...`);
+      return console.error(err);
     });
     BETFAIR.on('close', code => {
       if(code < 1) {
@@ -58,63 +40,15 @@ module.exports = function (RUNNER, DB_CONN) {
 
     SMARKETS.stdout.on('data', data => {
       console.log(`data from smarkets bot for ${RUNNER}`);
-      return console.log(data);
+      return console.log(data.toString());
       //return saveData(DB_CONN, 'smarkets', RUNNER, data);
     });
     SMARKETS.stderr.on('data', err => {
-      console.error(`SMARKETS err:`);
+      console.error(`SMARKETS err for ${RUNNER}...`);
       return console.error(err.toString());
-    });
-    SMARKETS.on('close', code => {
-      if(code < 1) {
-        return console.log(`SMARKETS BOT for ${RUNNER} closed normally...`);
-      } else {
-        return console.error(`SMARKETS BOT for ${RUNNER} closed abnormally...`);
-      }
-    });*/
-
-    const
-      BETFAIR = spawn('node', ['./betfair.js'], {
-        env: B_ARGS,
-        stdio: ['pipe', 'ipc', 'pipe']
-      }),
-      SMARKETS = spawn('node', ['./smarkets.js'], {
-        env: S_ARGS,
-        stdio: ['pipe', 'ipc', 'pipe']
-      });
-
-      // listen for data
-
-    BETFAIR.on('message', data => {
-      console.log(`data from betfair bot for ${RUNNER}`);
-      return console.log(data.msg);
-    });
-    BETFAIR.stderr.on('data', err => {
-      console.error(`BETFAIR err:`);
-      return console.error(err.toString());
-    });
-    BETFAIR.on('error', err => {
-      console.error(`BETFAIR err:`);
-      return console.error(err);
-    });
-    BETFAIR.on('close', code => {
-      if(code < 1) {
-        return console.log(`BETFAIR BOT for ${RUNNER} closed normally...`);
-      } else {
-        return console.error(`BETFAIR BOT for ${RUNNER} closed abnormally...`);
-      }
-    });
-
-    SMARKETS.on('message', data => {
-      console.log(`data from smarkets bot for ${RUNNER}`);
-      return console.log(data.msg);
-      SMARKETS.stderr.on('data', err => {
-        console.error(`SMARKETS err:`);
-        return console.error(err.toString());
-      });
     });
     SMARKETS.on('error', err => {
-      console.error(`SMARKETS err:`);
+      console.error(`SMARKETS CP err for ${RUNNER}...`);
       return console.error(err);
     });
     SMARKETS.on('close', code => {

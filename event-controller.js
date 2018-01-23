@@ -5,16 +5,13 @@ if(process.env.NODE_ENV != 'production') {
 //=============================================================================
 // dependencies
 const
+  {spawn} = require('child_process'),
   P = require('puppeteer'),
   Promise = require('bluebird'),
   MongoClient = require('mongodb').MongoClient,
   marketController = require('./market-controller'),
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
-  EMAIL = process.env.EMAIL,
-  BETFAIR_PWD = process.env.BETFAIR_PWD,
-  SMARKETS_PWD = process.env.SMARKETS_PWD,
-  BETFAIR_URL = process.env.BETFAIR_URL,
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_RACES_CONTAINER_SELECTOR = 'ul.contracts',
   SMARKETS_RUNNERS_SELECTOR = 'div.contract-info.-horse-racing',
@@ -64,6 +61,28 @@ async function getRunners() {
   return Promise.resolve(true);
 }
 
+function spawnMarketController(RUNNER) {
+  const marketController = spawn('node', ['./market-controller.js', RUNNER]);
+
+  marketController.stdout.on('data', data => {
+    console.log(`data from marketController for ${RUNNER}...`);
+    console.log(data.toString());
+  });
+
+  marketController.stderr.on('data', err => {
+    console.log(`err from marketController for ${RUNNER}...`);
+    console.error(err.toString());
+  });
+
+  marketController.on('close', code => {
+    if(code < 1) {
+      return console.log(`marketController for ${RUNNER} closed normally...`);
+    } else {
+      return console.error(`marketController for ${RUNNER} closed abnormally...`);
+    }
+  });
+}
+
 // connect to DBURL
 let DB_CONN;
 
@@ -105,7 +124,8 @@ connectToDB()
     let raceDoc = {
       raceLabel: RACE_LABEL,
       runners: {},
-      winner: ''
+      winner: '',
+      arbs: []
     };
 
     runnersList.forEach(runner => raceDoc.runners[runner] = {
@@ -139,10 +159,9 @@ connectToDB()
     console.log('all good...');
     console.log('launching market controllers...');
     // spawn 1 market controller per runner
-    //return runnersList.forEach(runner => marketController(runner));
+    //return runnersList.forEach(runner => spawnMarketController(runner));
+    //return spawnMarketController(runnersList[0], DB_CONN);
+    // create 1 market controller per runner
     return marketController(runnersList[0], DB_CONN);
   })
-  .catch(err => console.error(err))
-
-// handle SIGINT
-process.on('SIGINT', () => process.exit(0));
+  .catch(err => console.error(err));

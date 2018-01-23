@@ -3,22 +3,25 @@
  */
 //=============================================================================
 'use strict';
+if(process.env.NODE_ENV != 'production') {
+  require('dotenv').config();
+}
 //=============================================================================
 // dependencies
 const P = require('puppeteer');
 
 // module variables
 const
-  HOMEPAGE_URL = 'https://smarkets.com/',
   EMAIL = process.env.EMAIL,
-  PWD = process.env.PWD,
-  RUNNER = process.env.RUNNER,
-  RACE_URL = process.env.URL,
+  PWD = process.env.SMARKETS_PWD,
+  RACE_URL = process.env.SMARKETS_URL,
+  RUNNER = process.argv[2],
   ACCESS_LOGIN_SELECTOR = '#right-nav-section-login > div.right-nav-section-content > a:nth-child(2)',
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
-  SIGN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  RACES_CONTAINER_SELECTOR = 'ul.contracts';
+  SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
+  SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
+  RACES_CONTAINER_SELECTOR = '#main-content > main > div > div:nth-child(3) > ul > li:nth-child(1)';
 
 
 // define scraper function
@@ -35,11 +38,13 @@ async function bot() {
   await page.setViewport({width: 1366, height: 768});
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
-  // navigate to smarkets homepage
-  await page.goto(HOMEPAGE_URL, {
-    waitUntil: 'networkidle0',
+  // navigate to RACE_URL
+  await page.goto(RACE_URL, {
+    waitUntil: 'networkidle2',
     timeout: 180000
   });
+  // ensure ACCESS_LOGIN_SELECTOR is available
+  await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
   // click the button to access login
   await page.click(ACCESS_LOGIN_SELECTOR);
   // wait for EMAIL and PWD selectors to be available
@@ -48,20 +53,13 @@ async function bot() {
   // enter email
   await page.type(EMAIL_SELECTOR, EMAIL, {delay: 100});
   await page.waitFor(2*1000);
+  // click show pwd btn
+  await page.click(SHOW_PWD_SELECTOR);
   //enter password
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
-  process.send({msg: `RUNNER: ${RUNNER}, PWD: ${PWD}, EMAIL: ${EMAIL}, RACE_URL: ${RACE_URL} from smarkets...`});
-  /*//return console.log('filled creds from smarkets...');
   await page.waitFor(2*1000);
   // click login button
-  await page.click(SIGN_BTN_SELECTOR);
-  // navigate to RACE_URL
-  await page.goto(RACE_URL, {
-    waitUntil: 'networkidle0',
-    timeout: 180000
-  });
-  // add tag for moment.js
-  await page.addScriptTag({url: 'https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js'});
+  await page.click(SIGNIN_BTN_SELECTOR);
   // ensure race container selector available
   await page.waitForSelector(RACES_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
@@ -128,7 +126,7 @@ async function bot() {
           }
         }
         if(!!betType && !!odds && !!liquidity) {
-          const timestamp = moment().format('MMMM Do YYYY, h:mm:ss a');
+          const timestamp = Date.now();
           const data = {
             betType,
             odds,
@@ -140,7 +138,7 @@ async function bot() {
         }
       }
     );
-  }, RUNNER);*/
+  }, RUNNER);
 }
 
 // execute scraper

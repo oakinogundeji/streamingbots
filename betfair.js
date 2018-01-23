@@ -3,6 +3,9 @@
  */
 //=============================================================================
 'use strict';
+if(process.env.NODE_ENV != 'production') {
+  require('dotenv').config();
+}
 //=============================================================================
 // dependencies
 const P = require('puppeteer');
@@ -11,13 +14,14 @@ const P = require('puppeteer');
 const
   LOGIN_URL = 'https://www.betfair.com/sport',
   EMAIL = process.env.EMAIL,
-  PWD = process.env.PWD,
-  RUNNER = process.env.RUNNER,
-  RACE_URL = process.env.URL,
-  EMAIL_SELECTOR = '#ssc-liu',
-  PWD_SELECTOR = '#ssc-lipw',
-  LOGIN_BTN_SELECTOR = '#ssc-lis',
-  RACES_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper > bf-marketview-runners-list.runners-list-unpinned > div';
+  PWD = process.env.BETFAIR_PWD,
+  RACE_URL = process.env.BETFAIR_URL,
+  RUNNER = process.argv[2],
+  EMAIL_SELECTOR = '#login-dialog-username-input',
+  PWD_SELECTOR = '#login-dialog-password-input',
+  ACCESS_LOGIN_SELECTOR = '#betslip-container > div > div > div.pane.active > div > div > div > ng-include > ng-include:nth-child(1) > div.open-selection-text > p.selection-text.highlighted > span',
+  LOGIN_BTN_SELECTOR = 'body > ng-on-http-stable > ng-transclude > div.login-dialog > div > div > div > div > section > form > div:nth-child(10) > input',
+  RACES_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div';
 
 
 // define scraper function
@@ -34,11 +38,15 @@ async function bot() {
   await page.setViewport({width: 1366, height: 768});
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
-  // navigate to betfair homepage
-  await page.goto(LOGIN_URL, {
-    waitUntil: 'networkidle0',
+  // navigate to RACE_URL
+  await page.goto(RACE_URL, {
+    waitUntil: 'networkidle2',
     timeout: 180000
   });
+  // ensure ACCESS_LOGIN_SELECTOR is available
+  await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
+  // click ACCESS_LOGIN_SELECTOR button
+  await page.click(ACCESS_LOGIN_SELECTOR);
   // wait for EMAIL and PWD selectors to be available
   await page.waitForSelector(EMAIL_SELECTOR);
   await page.waitForSelector(PWD_SELECTOR);
@@ -47,18 +55,9 @@ async function bot() {
   await page.waitFor(2*1000);
   //enter password
   await page.type(PWD_SELECTOR, PWD, {delay: 100});
-  process.send({msg: `RUNNER: ${RUNNER}, PWD: ${PWD}, EMAIL: ${EMAIL}, RACE_URL: ${RACE_URL} from betfair...`});
-  /*//return console.log('filled creds from betfair...');
   await page.waitFor(2*1000);
   // click login button
   await page.click(LOGIN_BTN_SELECTOR);
-  // navigate to RACE_URL
-  await page.goto(RACE_URL, {
-    waitUntil: 'networkidle0',
-    timeout: 180000
-  });
-  // add tag for moment.js
-  await page.addScriptTag({url: 'https://cdn.jsdelivr.net/npm/moment@2.20.1/moment.min.js'});
   // ensure race container selector available
   await page.waitForSelector(RACES_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
@@ -137,7 +136,7 @@ async function bot() {
             }
           }}
           if(!!betType && !!odds && !!liquidity) {
-            const timestamp = moment().format('MMMM Do YYYY, h:mm:ss a');
+            const timestamp = Date.now();
             const data = {
               betType,
               odds,
@@ -150,7 +149,7 @@ async function bot() {
         }
       }
     );
-  }, RUNNER);*/
+  }, RUNNER);
 }
 
 // execute scraper
