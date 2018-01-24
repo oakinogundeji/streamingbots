@@ -43,6 +43,7 @@ async function bot() {
     waitUntil: 'networkidle2',
     timeout: 180000
   });
+  await page.waitFor(5*1000);
   // ensure ACCESS_LOGIN_SELECTOR is available
   await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
   // click ACCESS_LOGIN_SELECTOR button
