@@ -34,6 +34,35 @@ async function connectToDB () {
   }
 }
 
+async function createRunnerDoc() {
+  let runnerDoc = {
+    raceLabel: RACE_LABEL,
+    runner: RUNNER,
+    win: false,
+    b: [],
+    s: [],
+    arbs: []
+  };
+
+  // confirm that runnerDoc does not yet exist on dBase
+  let alreadyExists = await DB_CONN.collection('races').findOne({raceLabel: RACE_LABEL, runner: RUNNER});
+  if(!alreadyExists) {
+    let row = await DB_CONN.collection('races').insertOne(runnerDoc);
+
+    if(row.result.ok) {
+      console.log(`runnerDoc created for ${RUNNER}...`);
+      console.log(runnerDoc);
+      return Promise.resolve(true);
+    } else {
+      const newErr = new Error(`runnerDoc NOT created for ${RUNNER}...`);
+      return Promise.reject(newErr);
+    }
+  } else {
+    console.log(`runnerDoc for ${RUNNER} already exists...`);
+    return Promise.resolve(true);
+  }
+}
+
 function spawnBots() {
   // spawn the BOTS
   console.log(`spawning 2 bots for ${RUNNER}`);
@@ -49,7 +78,7 @@ const
     const dataObj = JSON.parse(data.toString());
     console.log(dataObj);
     checkForArbs('betfair', dataObj);
-    return saveData(DB_CONN, 'betfair', RUNNER, dataObj);
+    return saveData('betfair', dataObj);
   });
   BETFAIR.stderr.on('data', err => {
     console.error(`BETFAIR err for ${RUNNER}...`);
@@ -72,7 +101,7 @@ const
     const dataObj = JSON.parse(data.toString());
     console.log(dataObj);
     checkForArbs('smarkets', dataObj);
-    return saveData(DB_CONN, 'smarkets', RUNNER, dataObj);
+    return saveData('smarkets', dataObj);
   });
   SMARKETS.stderr.on('data', err => {
     console.error(`SMARKETS err for ${RUNNER}...`);
@@ -91,46 +120,40 @@ const
   });
 }
 
-async function saveData(DB_CONN, exchange, RUNNER, data) {
+async function saveData(exchange, data) {
 
   // check which exchange is reporting the data
   if(exchange == 'betfair') {
-    return saveBetfairData(DB_CONN, RUNNER, data);
+    return saveBetfairData(data);
   } else if(exchange == 'smarkets') {
-    return saveSmarketsData(DB_CONN, RUNNER, data);
+    return saveSmarketsData(data);
   }
 }
 
-async function saveBetfairData(DB_CONN, RUNNER, data) {
-  // extract horseName
-  const nestedField = 'runners.' + RUNNER + '.betfair';
+async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
-    raceLabel: RACE_LABEL}, {$push: {
-      [nestedField]: data
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({raceLabel: RACE_LABEL, runner: RUNNER}, {$push: {
+      b: data
     }});
   if(addNewData.ok) {
-    console.log('addNewData betfair...');
+    console.log(`added new betfair data for ${RUNNER}...`);
     return Promise.resolve(true);
   } else {
-    const newErr = new Error(`failed to update ${RUNNER}`);
+    const newErr = new Error(`failed to update betfair data for ${RUNNER}...`);
     return Promise.reject(newErr);
   }
 }
 
-async function saveSmarketsData(DB_CONN, RUNNER, data) {
-  // extract horseName
-  const nestedField = 'runners.' + RUNNER + '.smarkets';
-  // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
-    raceLabel: RACE_LABEL}, {$push: {
-      [nestedField]: data
+async function saveSmarketsData(data) {
+  // push data obj into 'smarkets' array
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({raceLabel: RACE_LABEL, runner: RUNNER}, {$push: {
+      s: data
     }});
   if(addNewData.ok) {
-    console.log('addNewData smarkets...');
+    console.log(`added new smarkets data for ${RUNNER}...`);
     return Promise.resolve(true);
   } else {
-    const newErr = new Error(`failed to update ${RUNNER}`);
+    const newErr = new Error(`failed to update smarkets data for ${RUNNER}...`);
     return Promise.reject(newErr);
   }
 }
@@ -258,6 +281,9 @@ connectToDB()
   .then(db => {
     DB_CONN = db;
     return Promise.resolve(true);
+  })
+  .then(ok => {
+    return createRunnerDoc();
   })
   .then(ok => {
     console.log(`spawning streaming BOTs for ${RUNNER}...`);

@@ -120,7 +120,7 @@ connectToDB()
     console.log(raceDoc);
 
     // confirm that raceCard does not yet exist on dBase
-    let alreadyExists = await DB_CONN.collection('races').findOne(raceDoc);
+    let alreadyExists = await DB_CONN.collection('races').findOne({raceLabel: RACE_LABEL});
 
     if(!alreadyExists) {
       let row = await DB_CONN.collection('races').insertOne(raceDoc);
