@@ -1,12 +1,16 @@
 'use strict';
+if(process.env.NODE_ENV != 'production') {
+  require('dotenv').config();
+}
 //=============================================================================
 const
   {spawn} = require('child_process'),
   Promise = require('bluebird'),
   RUNNER = process.argv[2],
-  RACE_LABEL = process.argv[3];
-
-return console.log(`RUNNER: ${RUNNER}, RACE-LABEL: ${RACE_LABEL}`);
+  RACE_LABEL = process.argv[3],
+  MongoClient = require('mongodb').MongoClient,
+  DBURL = process.env.DBURL,
+  DB = DBURL.split('/')[3];
 
 let arbTrigger = {
   betfair: {l0: null, liquidity: null},
@@ -14,8 +18,23 @@ let arbTrigger = {
 };
 
 // helper functions
+// connect to DBURL
+let DB_CONN;
 
-function spawnBots(RUNNER) {
+async function connectToDB () {
+  let client;
+  try {
+    client = await MongoClient.connect(DBURL);
+  } catch(err) {
+    console.error(err);
+    return process.exit(1);
+  }
+  if(client) {
+    return client;
+  }
+}
+
+function spawnBots() {
   // spawn the BOTS
   console.log(`spawning 2 bots for ${RUNNER}`);
 
@@ -227,4 +246,21 @@ async function saveArbs(data) {
   }
 }
 
-spawnBots(RUNNER);
+// execute
+
+connectToDB()
+  .then(async (client) => {
+    console.log(`SELECTION for ${RUNNER} successfully connected to ${DBURL}`);
+    console.log(`DB: ${DB}`);
+    const db = client.db(DB);
+    return db;
+  })
+  .then(db => {
+    DB_CONN = db;
+    return Promise.resolve(true);
+  })
+  .then(ok => {
+    console.log(`spawning streaming BOTs for ${RUNNER}...`);
+    return spawnBots();
+  })
+  .catch(err => console.error(err));
