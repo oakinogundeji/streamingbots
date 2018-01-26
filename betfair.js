@@ -43,7 +43,7 @@ async function bot() {
     waitUntil: 'networkidle2',
     timeout: 180000
   });
-  await page.waitFor(5*1000);
+  await page.waitFor(10*1000);
   // ensure ACCESS_LOGIN_SELECTOR is available
   await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
   // click ACCESS_LOGIN_SELECTOR button
@@ -72,7 +72,7 @@ async function bot() {
           betType,
           odds,
           liquidity;
-        if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
+        if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {// check that event occurs on 'runner-line' class
           // check for 12 conditions
           if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') && (e.target.parentElement.parentElement.parentElement.className == 'bet-buttons back-cell last-back-cell') && (e.target.className == 'bet-button-size') && (e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].childNodes[4].innerText.split('\n')[0] == RUNNER)) {
             betType = 'b0';
@@ -102,7 +102,7 @@ async function bot() {
             betType = 'l1';
             liquidity = e.target.innerText;
             odds = e.target.parentElement.children[0].innerText;
-          } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') && (e.target.parentElement.parentElement.parentElement.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') && (e.target.className == 'bet-button-size') && (e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].childNodes[4].innerText.split('\n')[0] == RUNNER)) {
+          } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') && (e.target.parentElement.parentElement.parentElement.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') && (e.target.className == 'bet-button-price') && (e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].childNodes[4].innerText.split('\n')[0] == RUNNER)) {
             betType = 'l1';
             liquidity = e.target.parentElement.children[1].innerText;
             odds = e.target.innerText;
@@ -118,7 +118,7 @@ async function bot() {
             betType = 'l2';
             liquidity = e.target.innerText;
             odds = e.target.parentElement.children[0].innerText;
-          } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') && (e.target.parentElement.parentElement.parentElement.previousElementSibling.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') && (e.target.className == 'bet-button-size') && (e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].childNodes[4].innerText.split('\n')[0] == RUNNER)) {
+          } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') && (e.target.parentElement.parentElement.parentElement.previousElementSibling.previousElementSibling.className == 'bet-buttons lay-cell first-lay-cell') && (e.target.className == 'bet-button-price') && (e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].childNodes[4].innerText.split('\n')[0] == RUNNER)) {
             betType = 'l2';
             liquidity = e.target.parentElement.children[1].innerText;
             odds = e.target.innerText;

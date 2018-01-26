@@ -61,28 +61,6 @@ async function getRunners() {
   return Promise.resolve(true);
 }
 
-function spawnMarketController(RUNNER) {
-  const marketController = spawn('node', ['./market-controller.js', RUNNER]);
-
-  marketController.stdout.on('data', data => {
-    console.log(`data from marketController for ${RUNNER}...`);
-    console.log(data.toString());
-  });
-
-  marketController.stderr.on('data', err => {
-    console.log(`err from marketController for ${RUNNER}...`);
-    console.error(err.toString());
-  });
-
-  marketController.on('close', code => {
-    if(code < 1) {
-      return console.log(`marketController for ${RUNNER} closed normally...`);
-    } else {
-      return console.error(`marketController for ${RUNNER} closed abnormally...`);
-    }
-  });
-}
-
 // connect to DBURL
 let DB_CONN;
 
@@ -158,10 +136,8 @@ connectToDB()
   .then(ok => {
     console.log('all good...');
     console.log('launching market controllers...');
-    // spawn 1 market controller per runner
-    //return runnersList.forEach(runner => spawnMarketController(runner));
-    //return spawnMarketController(runnersList[0], DB_CONN);
     // create 1 market controller per runner
-    return marketController(runnersList[0], DB_CONN);
+    return marketController(runnersList[0], DB_CONN, RACE_LABEL);
+    //return runnersList.forEach(runner => marketController(runner, DB_CONN, RACE_LABEL));
   })
   .catch(err => console.error(err));

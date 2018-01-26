@@ -1,9 +1,14 @@
 'use strict';
 //=============================================================================
-module.exports = function (RUNNER, DB_CONN) {
+module.exports = function (RUNNER, DB_CONN, RACE_LABEL) {
   const
     {spawn} = require('child_process'),
     Promise = require('bluebird');
+
+  let arbTrigger = {
+    betfair: {l0: null, liquidity: null},
+    smarkets: {l0: null, liquidity: null}
+  };
 
   // helper functions
 
@@ -19,8 +24,10 @@ module.exports = function (RUNNER, DB_CONN) {
 
     BETFAIR.stdout.on('data', data => {
       console.log(`data from betfair bot for ${RUNNER}`);
-      return console.log(data.toString());
-      //return saveData(DB_CONN, 'betfair', RUNNER, data);
+      const dataObj = JSON.parse(data.toString());
+      console.log(dataObj);
+      checkForArbs('betfair', dataObj);
+      return saveData(DB_CONN, 'betfair', RUNNER, dataObj);
     });
     BETFAIR.stderr.on('data', err => {
       console.error(`BETFAIR err for ${RUNNER}...`);
@@ -40,8 +47,10 @@ module.exports = function (RUNNER, DB_CONN) {
 
     SMARKETS.stdout.on('data', data => {
       console.log(`data from smarkets bot for ${RUNNER}`);
-      return console.log(data.toString());
-      //return saveData(DB_CONN, 'smarkets', RUNNER, data);
+      const dataObj = JSON.parse(data.toString());
+      console.log(dataObj);
+      checkForArbs('smarkets', dataObj);
+      return saveData(DB_CONN, 'smarkets', RUNNER, dataObj);
     });
     SMARKETS.stderr.on('data', err => {
       console.error(`SMARKETS err for ${RUNNER}...`);
@@ -100,6 +109,117 @@ module.exports = function (RUNNER, DB_CONN) {
       return Promise.resolve(true);
     } else {
       const newErr = new Error(`failed to update ${RUNNER}`);
+      return Promise.reject(newErr);
+    }
+  }
+
+  function checkForArbs(exchange, data) {
+    if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
+      console.log('checkForArbs invoked...');
+      console.log(arbTrigger);
+      const odds = Number(data.odds);
+      // process data
+      // check if betType == 'l0'
+      if(data.betType == 'l0') {
+        arbTrigger.betfair.l0 = odds;
+        return arbTrigger.betfair.liquidity = data.liquidity;
+      } else {// check if arbTrigger vals have been initialized
+        if(!arbTrigger.smarkets.l0) {
+          return;
+        }
+        // check if arbs exists
+        if(odds > arbTrigger.smarkets.l0) {// arbs exists
+          console.log(`Arb exists for ${RUNNER}`);
+          let
+            betfairLiquidity = Number(data.liquidity.slice(1)),
+            smarketsLiquidity = Number(arbTrigger.smarkets.liquidity.slice(1)),
+            arbsLiquidity;
+          if((betfairLiquidity > smarketsLiquidity ) && (smarketsLiquidity > 2)) {
+            arbsLiquidity = arbTrigger.smarkets.liquidity;
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          } else if((smarketsLiquidity > betfairLiquidity ) && (betfairLiquidity > 2)) {
+            arbsLiquidity = data.liquidity;
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          } else {
+            arbsLiquidity = '£2';
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          }
+          const arbsData = {
+            b0: odds,
+            l0: arbTrigger.smarkets.l0,
+            back: 'betfair',
+            lay: 'smarkets',
+            runner: RUNNER,
+            liquidity: arbsLiquidity,
+            timestamp: data.timestamp
+          };
+          console.log(arbsData);
+          console.log('checkForArbs exit...');
+          return saveArbs(arbsData);
+        }
+      }
+    } else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
+      console.log('checkForArbs invoked...');
+      const odds = Number(data.odds);
+      // process data
+      // check if betType == 'l0'
+      if(data.betType == 'l0') {
+        arbTrigger.smarkets.l0 = odds;
+        return arbTrigger.smarkets.liquidity = data.liquidity;
+      } else {// check if arbTrigger vals have been initialized
+        if(!arbTrigger.betfair.l0) {
+          return;
+        }
+        // check if arbs exists
+        if(odds > arbTrigger.betfair.l0) {// arbs exists
+          console.log(`Arb exists for ${RUNNER}`);
+          let
+            smarketsLiquidity = Number(data.liquidity.slice(1)),
+            betfairLiquidity = Number(arbTrigger.betfair.liquidity.slice(1)),
+            arbsLiquidity;
+          if((smarketsLiquidity > betfairLiquidity ) && (betfairLiquidity > 2)) {
+            arbsLiquidity = arbTrigger.betfair.liquidity;
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          } else if((betfairLiquidity > smarketsLiquidity ) && (smarketsLiquidity > 2)) {
+            arbsLiquidity = data.liquidity;
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          } else {
+            arbsLiquidity = '£2';
+            console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
+            console.log(arbTrigger);
+          }
+          const arbsData = {
+            b0: odds,
+            l0: arbTrigger.betfair.l0,
+            back: 'smarkets',
+            lay: 'betfair',
+            runner: RUNNER,
+            liquidity: arbsLiquidity,
+            timestamp: data.timestamp
+          };
+          console.log(arbsData);
+          return saveArbs(arbsData);
+        }
+      }
+    }
+  }
+
+  async function saveArbs(data) {
+    // push data obj into 'arbs' array
+    const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+      raceLabel: RACE_LABEL}, {$push: {
+        arbs: data
+      }});
+    if(addNewData.ok) {
+      console.log('addNewData arbs...');
+      return Promise.resolve(true);
+    } else {
+      const newErr = new Error(`failed to add arbs for ${RUNNER}`);
       return Promise.reject(newErr);
     }
   }
