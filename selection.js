@@ -34,7 +34,7 @@ async function connectToDB () {
   }
 }
 
-async function createRunnerDoc() {
+async function createSelectionDoc() {
   let selectionDoc = {
     eventLabel: RACE_LABEL,
     selection: RUNNER,
@@ -287,7 +287,7 @@ connectToDB()
     return Promise.resolve(true);
   })
   .then(ok => {
-    return createRunnerDoc();
+    return createSelectionDoc();
   })
   .then(ok => {
     console.log(`spawning streaming BOTs for ${RUNNER}...`);
