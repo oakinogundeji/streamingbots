@@ -35,30 +35,30 @@ async function connectToDB () {
 }
 
 async function createRunnerDoc() {
-  let runnerDoc = {
-    label: RACE_LABEL,
-    runner: RUNNER,
+  let selectionDoc = {
+    eventLabel: RACE_LABEL,
+    selection: RUNNER,
     win: false,
     b: [],
     s: [],
     arbs: []
   };
 
-  // confirm that runnerDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection('races').findOne({label: RACE_LABEL, runner: RUNNER});
+  // confirm that selectionDoc does not yet exist on dBase
+  let alreadyExists = await DB_CONN.collection('races').findOne({eventLabel: RACE_LABEL, selection: RUNNER});
   if(!alreadyExists) {
-    let row = await DB_CONN.collection('races').insertOne(runnerDoc);
+    let row = await DB_CONN.collection('races').insertOne(selectionDoc);
 
     if(row.result.ok) {
-      console.log(`runnerDoc created for ${RUNNER}...`);
-      console.log(runnerDoc);
+      console.log(`selectionDoc created for ${RUNNER}...`);
+      console.log(selectionDoc);
       return Promise.resolve(true);
     } else {
-      const newErr = new Error(`runnerDoc NOT created for ${RUNNER}...`);
+      const newErr = new Error(`selectionDoc NOT created for ${RUNNER}...`);
       return Promise.reject(newErr);
     }
   } else {
-    console.log(`runnerDoc for ${RUNNER} already exists...`);
+    console.log(`selectionDoc for ${RUNNER} already exists...`);
     return Promise.resolve(true);
   }
 }
@@ -132,7 +132,7 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({label: RACE_LABEL, runner: RUNNER}, {$push: {
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: RACE_LABEL, selection: RUNNER}, {$push: {
       b: data
     }});
   if(addNewData.ok) {
@@ -146,7 +146,7 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({label: RACE_LABEL, runner: RUNNER}, {$push: {
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: RACE_LABEL, selection: RUNNER}, {$push: {
       s: data
     }});
   if(addNewData.ok) {
@@ -198,7 +198,7 @@ function checkForArbs(exchange, data) {
           l0: arbTrigger.smarkets.l0,
           back: 'betfair',
           lay: 'smarkets',
-          runner: RUNNER,
+          selection: RUNNER,
           liquidity: arbsLiquidity,
           timestamp: data.timestamp,
           quality: arbsQuality
@@ -246,7 +246,7 @@ function checkForArbs(exchange, data) {
           l0: arbTrigger.betfair.l0,
           back: 'smarkets',
           lay: 'betfair',
-          runner: RUNNER,
+          selection: RUNNER,
           liquidity: arbsLiquidity,
           timestamp: data.timestamp,
           quality: arbsQuality
@@ -261,7 +261,7 @@ function checkForArbs(exchange, data) {
 async function saveArbs(data) {
   // push data obj into 'arbs' array
   const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
-    label: RACE_LABEL}, {$push: {
+    eventLabel: RACE_LABEL}, {$push: {
       arbs: data
     }});
   if(addNewData.ok) {
