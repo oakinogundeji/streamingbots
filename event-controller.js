@@ -13,11 +13,13 @@ const
   DB = DBURL.split('/')[3],
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_RACES_CONTAINER_SELECTOR = 'ul.contracts',
-  SMARKETS_RUNNERS_SELECTOR = 'div.contract-info.-horse-racing',
-  SMARKETS_RACE_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span';
+  SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info.-horse-racing',
+  SMARKETS_RACE_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
+  SMARKETS_TIME_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.info.-upcoming > div.event-badges > span';
 let
-  runnersList,
-  RACE_LABEL;
+  selectionsList,
+  RACE_LABEL,
+  TIME_LABEL;
 // helper functions
 
 async function getRunners() {
@@ -43,26 +45,29 @@ async function getRunners() {
   console.log('SMARKETS_RACES_CONTAINER_SELECTOR found, continuing...');
   // get RACE_LABEL
   RACE_LABEL = await page.$eval(SMARKETS_RACE_LABEL_SELECTOR, target => target.innerText);
+  // get TIME_LABEL
+  TIME_LABEL = await page.$eval(SMARKETS_TIME_LABEL_SELECTOR, target => target.innerText);
   console.log(`RACE_LABEL: ${RACE_LABEL}`);
   // get list of horses
-  runnersList = await page.$$eval(SMARKETS_RUNNERS_SELECTOR, targets => {
-    let runnersList = [];
+  selectionsList = await page.$$eval(SMARKETS_SELECTIONS_SELECTOR, targets => {
+    let selectionsList = [];
     targets.filter(target => {
       if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
-        const runner = target.children[1].children[0].innerText;
-        console.log(`runner info: ${runner}`);
-        return runnersList.push(runner);
+        const selection = target.children[1].children[0].innerText;
+        console.log(`selection info: ${selection}`);
+        return selectionsList.push(selection);
       }
     });
-    return runnersList;
+    return selectionsList;
   });
   await browser.close();
   return Promise.resolve(true);
 }
 
-function forkSelection(RUNNER, RACE_LABEL) {
-  console.log(`launching SELECTION for ${RUNNER}...`);
-  return fork('./selection.js', [RUNNER, RACE_LABEL]);
+function forkSelection(SELECTION, BOT_PARAMS) {
+  console.log(`launching SELECTION for ${SELECTION}...`);
+  let ARGS = JSON.stringify(BOT_PARAMS);
+  return fork('./selection.js', [ARGS, SELECTION]);
 }
 
 // connect to DBURL
@@ -93,47 +98,68 @@ connectToDB()
     return Promise.resolve(true);
   })
   .then(ok => {
-    console.log('getting runners...');
+    console.log('getting selections...');
     return getRunners();
   })
   .then(ok => {
-    console.log('runnersList...');
-    console.log(runnersList);
+    console.log('selectionsList...');
+    console.log(selectionsList);
     return Promise.resolve(true);
   })
   .then(async (ok) => {
     // create initial EVENT Card
-    let raceDoc = {
-      country: 'GB & IRE',
+    const venue = RACE_LABEL.split('/')[0].split('-')[1].trim();
+    const timeString = TIME_LABEL.split('-')[0].trim();
+    const timeStringLength = timeString.length;
+    const raceTime = timeString.slice(0, timeStringLength - 3);
+    const raceDateTime = new Date(raceTime);
+    const distanceAndType = RACE_LABEL.split('/')[1].trim();
+    const indexOfYards = distanceAndType.indexOf('yards');
+    const padding = 'yards'.length;
+    const raceType = distanceAndType.slice(indexOfYards + padding).trim();
+    const distance = distanceAndType.slice(0, indexOfYards + padding);
+    let eventCard = {
+      country: 'GB',
       sport: 'HR',
-      label: RACE_LABEL,
-      outcome: ''
+      time: raceDateTime,
+      venue: venue,
+      distance: distance,
+      raceType: raceType,
+      outcome: 'WIN'
     };
-    console.log(raceDoc);
+    const BOT_PARAMS = {
+      sport: eventCard.sport,
+      venue: venue,
+      time: raceDateTime,
+      distance: distance,
+      raceType: raceType,
+      country: eventCard.country
+    };
+    console.log(eventCard);
 
     // confirm that EVENT Card does not yet exist on dBase
     let alreadyExists = await DB_CONN.collection('races').findOne({label: RACE_LABEL, country: 'GB & IRE', sport: 'HR'});
 
     if(!alreadyExists) {
-      let row = await DB_CONN.collection('races').insertOne(raceDoc);
+      let row = await DB_CONN.collection('HR').insertOne(eventCard);
 
       if(row.result.ok) {
         console.log('EVENT Card created...');
-        return Promise.resolve(true);
+        return Promise.resolve(BOT_PARAMS);
       } else {
         const newErr = new Error('EVENT Card NOT created');
         return Promise.reject(newErr);
       }
     } else {
       console.log('EVENT Card already exists...');
-      return Promise.resolve(true);
+      return Promise.resolve(BOT_PARAMS);
     }
   })
-  .then(ok => {
+  .then(BOT_PARAMS => {
     console.log('all good...');
     console.log('launching SELECTIONs...');
-    // create 1 SELECTION per runner
-    return forkSelection(runnersList[0], RACE_LABEL);
-    //return runnersList.forEach(runner => forkSelection(runner, RACE_LABEL));
+    // create 1 SELECTION per selection
+    return forkSelection(selectionsList[0], BOT_PARAMS);
+    //return selectionsList.forEach(selection => forkSelection(selection, BOT_PARAMS));
   })
   .catch(err => console.error(err));

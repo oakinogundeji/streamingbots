@@ -6,8 +6,14 @@ if(process.env.NODE_ENV != 'production') {
 const
   {spawn} = require('child_process'),
   Promise = require('bluebird'),
-  RUNNER = process.argv[2],
-  RACE_LABEL = process.argv[3],
+  BOT_PARAMS = JSON.parse(process.argv[2]),
+  COUNTRY = BOT_PARAMS.country,
+  SPORT = BOT_PARAMS.sport,
+  SELECTION = process.argv[3],
+  TIME = BOT_PARAMS.time,
+  VENUE = BOT_PARAMS.venue,
+  DISTANCE = BOT_PARAMS.distance,
+  RACE_TYPE = BOT_PARAMS.raceType,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3];
@@ -36,8 +42,11 @@ async function connectToDB () {
 
 async function createSelectionDoc() {
   let selectionDoc = {
-    eventLabel: RACE_LABEL,
-    selection: RUNNER,
+    time: TIME,
+    venue: VENUE,
+    distance: DISTANCE,
+    raceType: RACE_TYPE,
+    selection: SELECTION,
     win: false,
     b: [],
     s: [],
@@ -45,77 +54,77 @@ async function createSelectionDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection('races').findOne({eventLabel: RACE_LABEL, selection: RUNNER});
+  let alreadyExists = await DB_CONN.collection(SPORT).findOne({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY});
   if(!alreadyExists) {
-    let row = await DB_CONN.collection('races').insertOne(selectionDoc);
+    let row = await DB_CONN.collection(SPORT).insertOne(selectionDoc);
 
     if(row.result.ok) {
-      console.log(`selectionDoc created for ${RUNNER}...`);
+      console.log(`selectionDoc created for ${SELECTION}...`);
       console.log(selectionDoc);
       return Promise.resolve(true);
     } else {
-      const newErr = new Error(`selectionDoc NOT created for ${RUNNER}...`);
+      const newErr = new Error(`selectionDoc NOT created for ${SELECTION}...`);
       return Promise.reject(newErr);
     }
   } else {
-    console.log(`selectionDoc for ${RUNNER} already exists...`);
+    console.log(`selectionDoc for ${SELECTION} already exists...`);
     return Promise.resolve(true);
   }
 }
 
 function spawnBots() {
   // spawn the BOTS
-  console.log(`spawning 2 bots for ${RUNNER}`);
+  console.log(`spawning 2 bots for ${SELECTION}`);
 
 const
-  BETFAIR = spawn('node', ['./betfair.js', RUNNER]),
-  SMARKETS = spawn('node', ['./smarkets.js', RUNNER]);
+  BETFAIR = spawn('node', ['./betfair.js', SELECTION]),
+  SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
 
     // listen for data
 
   BETFAIR.stdout.on('data', data => {
-    console.log(`data from betfair bot for ${RUNNER}`);
+    console.log(`data from betfair bot for ${SELECTION}`);
     const dataObj = JSON.parse(data.toString());
     console.log(dataObj);
     checkForArbs('betfair', dataObj);
     return saveData('betfair', dataObj);
   });
   BETFAIR.stderr.on('data', err => {
-    console.error(`BETFAIR err for ${RUNNER}...`);
+    console.error(`BETFAIR err for ${SELECTION}...`);
     return console.error(err.toString());
   });
   BETFAIR.on('error', err => {
-    console.error(`BETFAIR CP err for ${RUNNER}...`);
+    console.error(`BETFAIR CP err for ${SELECTION}...`);
     return console.error(err);
   });
   BETFAIR.on('close', code => {
     if(code < 1) {
-      return console.log(`BETFAIR BOT for ${RUNNER} closed normally...`);
+      return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
     } else {
-      return console.error(`BETFAIR BOT for ${RUNNER} closed abnormally...`);
+      return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
     }
   });
 
   SMARKETS.stdout.on('data', data => {
-    console.log(`data from smarkets bot for ${RUNNER}`);
+    console.log(`data from smarkets bot for ${SELECTION}`);
     const dataObj = JSON.parse(data.toString());
     console.log(dataObj);
     checkForArbs('smarkets', dataObj);
     return saveData('smarkets', dataObj);
   });
   SMARKETS.stderr.on('data', err => {
-    console.error(`SMARKETS err for ${RUNNER}...`);
+    console.error(`SMARKETS err for ${SELECTION}...`);
     return console.error(err.toString());
   });
   SMARKETS.on('error', err => {
-    console.error(`SMARKETS CP err for ${RUNNER}...`);
+    console.error(`SMARKETS CP err for ${SELECTION}...`);
     return console.error(err);
   });
   SMARKETS.on('close', code => {
     if(code < 1) {
-      return console.log(`SMARKETS BOT for ${RUNNER} closed normally...`);
+      return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
     } else {
-      return console.error(`SMARKETS BOT for ${RUNNER} closed abnormally...`);
+      return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
     }
   });
 }
@@ -132,28 +141,28 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: RACE_LABEL, selection: RUNNER}, {$push: {
+  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY}, {$push: {
       b: data
     }});
   if(addNewData.ok) {
-    console.log(`added new betfair data for ${RUNNER}...`);
+    console.log(`added new betfair data for ${SELECTION}...`);
     return Promise.resolve(true);
   } else {
-    const newErr = new Error(`failed to update betfair data for ${RUNNER}...`);
+    const newErr = new Error(`failed to update betfair data for ${SELECTION}...`);
     return Promise.reject(newErr);
   }
 }
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: RACE_LABEL, selection: RUNNER}, {$push: {
+  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY}, {$push: {
       s: data
     }});
   if(addNewData.ok) {
-    console.log(`added new smarkets data for ${RUNNER}...`);
+    console.log(`added new smarkets data for ${SELECTION}...`);
     return Promise.resolve(true);
   } else {
-    const newErr = new Error(`failed to update smarkets data for ${RUNNER}...`);
+    const newErr = new Error(`failed to update smarkets data for ${SELECTION}...`);
     return Promise.reject(newErr);
   }
 }
@@ -174,7 +183,7 @@ function checkForArbs(exchange, data) {
       }
       // check if arbs exists
       if(odds > arbTrigger.smarkets.l0) {// arbs exists
-        console.log(`Arb exists for ${RUNNER}`);
+        console.log(`Arb exists for ${SELECTION}`);
         let
           betfairLiquidity = Number(data.liquidity.slice(1)),
           smarketsLiquidity = Number(arbTrigger.smarkets.liquidity.slice(1)),
@@ -198,7 +207,7 @@ function checkForArbs(exchange, data) {
           l0: arbTrigger.smarkets.l0,
           back: 'betfair',
           lay: 'smarkets',
-          selection: RUNNER,
+          selection: SELECTION,
           liquidity: arbsLiquidity,
           timestamp: data.timestamp,
           quality: arbsQuality
@@ -222,7 +231,7 @@ function checkForArbs(exchange, data) {
       }
       // check if arbs exists
       if(odds > arbTrigger.betfair.l0) {// arbs exists
-        console.log(`Arb exists for ${RUNNER}`);
+        console.log(`Arb exists for ${SELECTION}`);
         let
           smarketsLiquidity = Number(data.liquidity.slice(1)),
           betfairLiquidity = Number(arbTrigger.betfair.liquidity.slice(1)),
@@ -246,7 +255,7 @@ function checkForArbs(exchange, data) {
           l0: arbTrigger.betfair.l0,
           back: 'smarkets',
           lay: 'betfair',
-          selection: RUNNER,
+          selection: SELECTION,
           liquidity: arbsLiquidity,
           timestamp: data.timestamp,
           quality: arbsQuality
@@ -260,7 +269,7 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({
     eventLabel: RACE_LABEL}, {$push: {
       arbs: data
     }});
@@ -268,7 +277,7 @@ async function saveArbs(data) {
     console.log('addNewData arbs...');
     return Promise.resolve(true);
   } else {
-    const newErr = new Error(`failed to add arbs for ${RUNNER}`);
+    const newErr = new Error(`failed to add arbs for ${SELECTION}`);
     return Promise.reject(newErr);
   }
 }
@@ -277,7 +286,7 @@ async function saveArbs(data) {
 
 connectToDB()
   .then(async (client) => {
-    console.log(`SELECTION for ${RUNNER} successfully connected to ${DBURL}`);
+    console.log(`SELECTION for ${SELECTION} successfully connected to ${DBURL}`);
     console.log(`DB: ${DB}`);
     const db = client.db(DB);
     return db;
@@ -290,7 +299,7 @@ connectToDB()
     return createSelectionDoc();
   })
   .then(ok => {
-    console.log(`spawning streaming BOTs for ${RUNNER}...`);
+    console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
   })
   .catch(err => console.error(err));
