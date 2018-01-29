@@ -59,8 +59,11 @@ async function bot() {
   await page.waitFor(2*1000);
   // click login button
   await page.click(LOGIN_BTN_SELECTOR);
+  await page.waitFor(30*1000);
   // ensure race container selector available
-  await page.waitForSelector(RACES_CONTAINER_SELECTOR);
+  await page.waitForSelector(RACES_CONTAINER_SELECTOR, {
+    timeout: 180000
+  });
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to , bets etc

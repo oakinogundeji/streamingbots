@@ -16,7 +16,7 @@ const
   PWD = process.env.SMARKETS_PWD,
   RACE_URL = process.env.SMARKETS_URL,
   RUNNER = process.argv[2],
-  ACCESS_LOGIN_SELECTOR = '#right-nav-section-login > div.right-nav-section-content > a:nth-child(2)',
+  ACCESS_LOGIN_SELECTOR = '#header-login',
   EMAIL_SELECTOR = '#login-form-email',
   PWD_SELECTOR = '#login-form-password',
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
@@ -125,7 +125,7 @@ async function bot() {
           betType = 'l2';
           odds = e.target.textContent;
           liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        }        
+        }
         if(!!betType && !!odds && !!liquidity) {
           const timestamp = Date.now();
           const data = {
