@@ -7,7 +7,10 @@ const
   {spawn} = require('child_process'),
   Promise = require('bluebird'),
   SELECTION = process.argv[2],
-  EVENT_LABEL = process.argv[3],
+  eventIdentifiers = JSON.parse(process.argv[3]),
+  EVENT_LABEL = eventIdentifiers.eventLabel,
+  COLLECTION = eventIdentifiers.collectionName,
+  RACE_DATE = eventIdentifiers.raceDate,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3];
@@ -37,6 +40,7 @@ async function connectToDB () {
 async function createRunnerDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
+    raceDate: RACE_DATE,
     selection: SELECTION,
     win: false,
     b: [],
@@ -45,9 +49,9 @@ async function createRunnerDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection('races').findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION});
   if(!alreadyExists) {
-    let row = await DB_CONN.collection('races').insertOne(selectionDoc);
+    let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
 
     if(row.result.ok) {
       console.log(`selectionDoc created for ${SELECTION}...`);
@@ -132,10 +136,10 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION}, {$push: {
       b: data
     }});
-  if(addNewData.ok) {
+  if(addNewData.lastErrorObject.updatedExisting) {
     console.log(`added new betfair data for ${SELECTION}...`);
     return Promise.resolve(true);
   } else {
@@ -146,10 +150,12 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION}, {$push: {
       s: data
     }});
-  if(addNewData.ok) {
+  console.log('addNewData');
+  return console.log(addNewData);
+  if(addNewData.lastErrorObject.updatedExisting) {
     console.log(`added new smarkets data for ${SELECTION}...`);
     return Promise.resolve(true);
   } else {
@@ -256,7 +262,7 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({
     eventLabel: EVENT_LABEL}, {$push: {
       arbs: data
     }});
