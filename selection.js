@@ -6,14 +6,8 @@ if(process.env.NODE_ENV != 'production') {
 const
   {spawn} = require('child_process'),
   Promise = require('bluebird'),
-  BOT_PARAMS = JSON.parse(process.argv[2]),
-  COUNTRY = BOT_PARAMS.country,
-  SPORT = BOT_PARAMS.sport,
-  SELECTION = process.argv[3],
-  TIME = BOT_PARAMS.time,
-  VENUE = BOT_PARAMS.venue,
-  DISTANCE = BOT_PARAMS.distance,
-  RACE_TYPE = BOT_PARAMS.raceType,
+  SELECTION = process.argv[2],
+  EVENT_LABEL = process.argv[3],
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3];
@@ -40,12 +34,9 @@ async function connectToDB () {
   }
 }
 
-async function createSelectionDoc() {
+async function createRunnerDoc() {
   let selectionDoc = {
-    time: TIME,
-    venue: VENUE,
-    distance: DISTANCE,
-    raceType: RACE_TYPE,
+    eventLabel: EVENT_LABEL,
     selection: SELECTION,
     win: false,
     b: [],
@@ -54,9 +45,9 @@ async function createSelectionDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(SPORT).findOne({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY});
+  let alreadyExists = await DB_CONN.collection('races').findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
   if(!alreadyExists) {
-    let row = await DB_CONN.collection(SPORT).insertOne(selectionDoc);
+    let row = await DB_CONN.collection('races').insertOne(selectionDoc);
 
     if(row.result.ok) {
       console.log(`selectionDoc created for ${SELECTION}...`);
@@ -141,7 +132,7 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY}, {$push: {
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       b: data
     }});
   if(addNewData.ok) {
@@ -155,7 +146,7 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({time: TIME, venue: VENUE, distance: DISTANCE, sport: SPORT, raceType: RACE_TYPE, selection: SELECTION, country: COUNTRY}, {$push: {
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       s: data
     }});
   if(addNewData.ok) {
@@ -201,7 +192,6 @@ function checkForArbs(exchange, data) {
           console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
           console.log(arbTrigger);
         }
-        const arbsQuality = odds / arbTrigger.smarkets.l0;
         const arbsData = {
           b0: odds,
           l0: arbTrigger.smarkets.l0,
@@ -209,8 +199,7 @@ function checkForArbs(exchange, data) {
           lay: 'smarkets',
           selection: SELECTION,
           liquidity: arbsLiquidity,
-          timestamp: data.timestamp,
-          quality: arbsQuality
+          timestamp: data.timestamp
         };
         console.log(arbsData);
         console.log('checkForArbs exit...');
@@ -249,7 +238,6 @@ function checkForArbs(exchange, data) {
           console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
           console.log(arbTrigger);
         }
-        const arbsQuality = odds / arbTrigger.betfair.l0;
         const arbsData = {
           b0: odds,
           l0: arbTrigger.betfair.l0,
@@ -257,8 +245,7 @@ function checkForArbs(exchange, data) {
           lay: 'betfair',
           selection: SELECTION,
           liquidity: arbsLiquidity,
-          timestamp: data.timestamp,
-          quality: arbsQuality
+          timestamp: data.timestamp
         };
         console.log(arbsData);
         return saveArbs(arbsData);
@@ -269,8 +256,8 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection(SPORT).findOneAndUpdate({
-    eventLabel: RACE_LABEL}, {$push: {
+  const addNewData = await DB_CONN.collection('races').findOneAndUpdate({
+    eventLabel: EVENT_LABEL}, {$push: {
       arbs: data
     }});
   if(addNewData.ok) {
@@ -296,7 +283,7 @@ connectToDB()
     return Promise.resolve(true);
   })
   .then(ok => {
-    return createSelectionDoc();
+    return createRunnerDoc();
   })
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
