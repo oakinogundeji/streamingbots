@@ -153,8 +153,6 @@ async function saveSmarketsData(data) {
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION}, {$push: {
       s: data
     }});
-  console.log('addNewData');
-  return console.log(addNewData);
   if(addNewData.lastErrorObject.updatedExisting) {
     console.log(`added new smarkets data for ${SELECTION}...`);
     return Promise.resolve(true);
