@@ -14,7 +14,7 @@ const
   DB = DBURL.split('/')[3],
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_RACES_CONTAINER_SELECTOR = 'ul.contracts',
-  SMARKETS_RUNNERS_SELECTOR = 'div.contract-info.-horse-racing',
+  SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info.-horse-racing',
   SMARKETS_RACE_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
   SMARKETS_TIME_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.info.-upcoming > div.event-badges > span';
 let
@@ -51,7 +51,7 @@ async function getRunners() {
   TIME_LABEL = await page.$eval(SMARKETS_TIME_LABEL_SELECTOR, target => target.innerText);
   console.log(`TIME_LABEL: ${TIME_LABEL}`);
   // get list of horses
-  selectionsList = await page.$$eval(SMARKETS_RUNNERS_SELECTOR, targets => {
+  selectionsList = await page.$$eval(SMARKETS_SELECTIONS_SELECTOR, targets => {
     let selectionsList = [];
     targets.filter(target => {
       if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
@@ -66,9 +66,10 @@ async function getRunners() {
   return Promise.resolve(true);
 }
 
-function forkSelection(RUNNER, eventLabel) {
-  console.log(`launching SELECTION for ${RUNNER}...`);
-  return fork('./selection.js', [RUNNER, eventLabel]);
+function forkSelection(SELECTION, eventIdentifiers) {
+  const SELECTION_INFO = JSON.stringify(eventIdentifiers);
+  console.log(`launching SELECTION for ${SELECTION}...`);
+  return fork('./selection.js', [SELECTION, SELECTION_INFO]);
 }
 
 // connect to DBURL
@@ -150,30 +151,31 @@ connectToDB()
     };
     console.log('eventCard');
     console.log(eventCard);
+    const collectionName = eventCard.sport;
 
     // confirm that EVENT Card does not yet exist on dBase
-    let alreadyExists = await DB_CONN.collection('HR').findOne({eventLabel: eventLabel, venue: venue, raceTime: raceTime, raceDate: raceDate});
+    let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, raceDate: raceDate});
 
     if(!alreadyExists) {
-      let row = await DB_CONN.collection('HR').insertOne(eventCard);
+      let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
 
       if(row.result.ok) {
         console.log('EVENT Card created...');
-        return Promise.resolve(eventLabel);
+        return Promise.resolve({eventLabel, raceDate, collectionName});
       } else {
         const newErr = new Error('EVENT Card NOT created');
         return Promise.reject(newErr);
       }
     } else {
       console.log('EVENT Card already exists...');
-      return Promise.resolve(eventLabel);
+      return Promise.resolve({eventLabel, raceDate, collectionName});
     }
   })
-  .then(eventLabel => {
+  .then(eventIdentifiers => {
     console.log('all good...');
-    return console.log('launching SELECTIONs...');
+    console.log('launching SELECTIONs...');
     // create 1 SELECTION per runner
-    return forkSelection(selectionsList[0], eventLabel);
-    //return selectionsList.forEach(runner => forkSelection(runner, eventLabel));
+    return forkSelection(selectionsList[0], eventIdentifiers);
+    //return selectionsList.forEach(runner => forkSelection(runner, eventIdentifiers));
   })
   .catch(err => console.error(err));
