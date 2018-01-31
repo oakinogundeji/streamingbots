@@ -20,6 +20,7 @@ let arbTrigger = {
   smarkets: {l0: null, liquidity: null}
 };
 
+
 // helper functions
 // connect to DBURL
 let DB_CONN;
@@ -37,19 +38,18 @@ async function connectToDB () {
   }
 }
 
-async function createRunnerDoc() {
+async function createSelectionDeltaDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
     raceDate: RACE_DATE,
     selection: SELECTION,
-    win: false,
+    flag: 'deltas',
     b: [],
-    s: [],
-    arbs: []
+    s: []
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
 
@@ -63,6 +63,34 @@ async function createRunnerDoc() {
     }
   } else {
     console.log(`selectionDoc for ${SELECTION} already exists...`);
+    return Promise.resolve(true);
+  }
+}
+
+async function createSelectionArbsDoc() {
+  let selectionArbsDoc = {
+    eventLabel: EVENT_LABEL,
+    raceDate: RACE_DATE,
+    selection: SELECTION,
+    flag: 'arbs',
+    arbs: []
+  };
+
+  // confirm that selectionDoc does not yet exist on dBase
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'arbs'});
+  if(!alreadyExists) {
+    let row = await DB_CONN.collection(COLLECTION).insertOne(selectionArbsDoc);
+
+    if(row.result.ok) {
+      console.log(`selectionArbsDoc created for ${SELECTION}...`);
+      console.log(selectionArbsDoc);
+      return Promise.resolve(true);
+    } else {
+      const newErr = new Error(`selectionArbsDoc NOT created for ${SELECTION}...`);
+      return Promise.reject(newErr);
+    }
+  } else {
+    console.log(`selectionArbsDoc for ${SELECTION} already exists...`);
     return Promise.resolve(true);
   }
 }
@@ -136,7 +164,7 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
       b: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -150,7 +178,7 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
       s: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -260,11 +288,10 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({
-    eventLabel: EVENT_LABEL}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
     }});
-  if(addNewData.ok) {
+  if(addNewData.lastErrorObject.updatedExisting) {
     console.log('addNewData arbs...');
     return Promise.resolve(true);
   } else {
@@ -286,9 +313,8 @@ connectToDB()
     DB_CONN = db;
     return Promise.resolve(true);
   })
-  .then(ok => {
-    return createRunnerDoc();
-  })
+  .then(ok => createSelectionDeltaDoc())
+  .then(ok => createSelectionArbsDoc())
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();

@@ -66,6 +66,87 @@ async function getRunners() {
   return Promise.resolve(true);
 }
 
+async function createEventCard() {
+
+  // setup
+  /*const eventLabel = crypto.createHash('md5').update(RACE_LABEL).digest('hex');*/
+  let
+    distanceIndex,
+    padding;
+  const venue = RACE_LABEL.split('/')[0].split('-')[1].trim();
+  const timeString = TIME_LABEL.split('-')[0].trim();
+  const timeStringLength = timeString.length;
+  const raceDateTime = timeString.slice(0, timeStringLength - 3).trim();
+  const raceDateTimeArr = raceDateTime.split(',');
+  const raceTime = raceDateTimeArr.pop().trim();
+  const eventLabel = venue +' - '+ raceTime;
+  const raceDate = raceDateTimeArr.join(',');
+  const distanceAndType = RACE_LABEL.split('/')[1].trim();
+  if(distanceAndType.includes('yards')) {
+    distanceIndex = distanceAndType.indexOf('yards');
+    padding = 'yards'.length;
+  } else if(distanceAndType.includes('yard')) {
+    distanceIndex = distanceAndType.indexOf('yard');
+    padding = 'yard'.length;
+  } else if(distanceAndType.includes('furlongs')) {
+    distanceIndex = distanceAndType.indexOf('furlongs');
+    padding = 'furlongs'.length;
+  } else if(distanceAndType.includes('furlong')) {
+    distanceIndex = distanceAndType.indexOf('furlong');
+    padding = 'furlong'.length;
+  } else if(distanceAndType.includes('miles')) {
+    distanceIndex = distanceAndType.indexOf('miles');
+    padding = 'miles'.length;
+  } else {
+    distanceIndex = distanceAndType.indexOf('mile');
+    padding = 'mile'.length;
+  }
+  let raceType = distanceAndType.slice(distanceIndex + padding);
+  raceType = raceType.trim();
+  if(raceType.toLowerCase().includes('handicap')) {
+    raceType = raceType.toLowerCase();
+    raceType = raceType.replace('handicap', ' ');
+    raceType = raceType.trim();
+  }
+  const distance = distanceAndType.slice(0, distanceIndex + padding);
+  // create initial EVENT Card
+  let eventCard = {
+    eventLabel,
+    venue,
+    raceTime,
+    raceDate,
+    raceType,
+    distance,
+    country: 'GB',
+    sport: 'HR',
+    outcome: 'WIN'
+  };
+  if(RACE_LABEL.toLowerCase().includes('handicap')) {
+    eventCard.handicap = true;
+  }
+  console.log('eventCard');
+  console.log(eventCard);
+  const collectionName = eventCard.sport;
+
+  // confirm that EVENT Card does not yet exist on dBase
+  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, raceDate: raceDate});
+
+  if(!alreadyExists) {
+    let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
+
+    if(row.result.ok) {
+      console.log('EVENT Card created...');
+      return Promise.resolve({eventLabel, raceDate, collectionName});
+    } else {
+      const newErr = new Error('EVENT Card NOT created');
+      return Promise.reject(newErr);
+    }
+  } else {
+    console.log('EVENT Card already exists...');
+    return Promise.resolve({eventLabel, raceDate, collectionName});
+  }
+}
+
 function forkSelection(SELECTION, eventIdentifiers) {
   const SELECTION_INFO = JSON.stringify(eventIdentifiers);
   console.log(`launching SELECTION for ${SELECTION}...`);
@@ -108,69 +189,7 @@ connectToDB()
     console.log(selectionsList);
     return Promise.resolve(true);
   })
-  .then(async (ok) => {
-
-    // setup
-    /*const eventLabel = crypto.createHash('md5').update(RACE_LABEL).digest('hex');*/
-    let
-      distanceIndex,
-      padding;
-    const venue = RACE_LABEL.split('/')[0].split('-')[1].trim();
-    const timeString = TIME_LABEL.split('-')[0].trim();
-    const timeStringLength = timeString.length;
-    const raceDateTime = timeString.slice(0, timeStringLength - 3).trim();
-    const raceDateTimeArr = raceDateTime.split(',');
-    const raceTime = raceDateTimeArr.pop().trim();
-    const eventLabel = venue +' - '+ raceTime;
-    const raceDate = raceDateTimeArr.join(',');
-    const distanceAndType = RACE_LABEL.split('/')[1].trim();
-    if(distanceAndType.includes('yards')) {
-      distanceIndex = distanceAndType.indexOf('yards');
-      padding = 'yards'.length;
-    } else if(distanceAndType.includes('furlongs')) {
-      distanceIndex = distanceAndType.indexOf('furlongs');
-      padding = 'furlongs'.length;
-    } else {
-      distanceIndex = distanceAndType.indexOf('miles');
-      padding = 'miles'.length;
-    }
-    let raceType = distanceAndType.slice(distanceIndex + padding);
-    raceType = raceType.trim();
-    const distance = distanceAndType.slice(0, distanceIndex + padding);
-    // create initial EVENT Card
-    let eventCard = {
-      eventLabel,
-      venue,
-      raceTime,
-      raceDate,
-      raceType,
-      distance,
-      country: 'GB',
-      sport: 'HR',
-      outcome: 'WIN'
-    };
-    console.log('eventCard');
-    console.log(eventCard);
-    const collectionName = eventCard.sport;
-
-    // confirm that EVENT Card does not yet exist on dBase
-    let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, raceDate: raceDate});
-
-    if(!alreadyExists) {
-      let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
-
-      if(row.result.ok) {
-        console.log('EVENT Card created...');
-        return Promise.resolve({eventLabel, raceDate, collectionName});
-      } else {
-        const newErr = new Error('EVENT Card NOT created');
-        return Promise.reject(newErr);
-      }
-    } else {
-      console.log('EVENT Card already exists...');
-      return Promise.resolve({eventLabel, raceDate, collectionName});
-    }
-  })
+  .then(ok => createEventCard())
   .then(eventIdentifiers => {
     console.log('all good...');
     console.log('launching SELECTIONs...');
