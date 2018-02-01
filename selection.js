@@ -5,6 +5,7 @@ if(process.env.NODE_ENV != 'production') {
 //=============================================================================
 const
   {spawn} = require('child_process'),
+  P = require('puppeteer'),
   Promise = require('bluebird'),
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
@@ -13,7 +14,10 @@ const
   RACE_DATE = eventIdentifiers.raceDate,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
-  DB = DBURL.split('/')[3];
+  DB = DBURL.split('/')[3],
+  BETFAIR_URL = process.env.BETFAIR_URL,
+  EVENT_END_URL = process.env.EVENT_END_URL,
+  EVENT_LINKS_SELECTOR = 'a.race-link';
 
 let arbTrigger = {
   betfair: {l0: null, liquidity: null},
@@ -150,6 +154,8 @@ const
       return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
     }
   });
+
+  return true;
 }
 
 async function saveData(exchange, data) {
@@ -300,6 +306,48 @@ async function saveArbs(data) {
   }
 }
 
+async function listenForCloseEvent() {
+  // instantiate browser
+  const browser = await P.launch({
+    headless: false,
+    timeout: 180000
+  });
+  // create blank page
+  const page = await browser.newPage();
+  // set viewport to 1366*768
+  await page.setViewport({width: 1366, height: 768});
+  // set the user agent
+  await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
+  // navigate to RACE_URL
+  await page.goto(EVENT_END_URL, {
+    waitUntil: 'networkidle2',
+    timeout: 180000
+  });
+  // wait for 30 secs
+  await page.waitFor(30*1000);
+  // define checkEventEnd function
+  async function checkEventEnd() {
+    console.log('checkEventEnd invoked...');
+    // get all events on page
+    const events = await page.$$eval(EVENT_LINKS_SELECTOR, (events, BETFAIR_URL) => {
+      console.log('querying for events...');
+      const eventNotEnded = events.filter(event => event.href == BETFAIR_URL);
+      console.log('eventNotEnded...');
+      console.log(eventNotEnded);
+      return eventNotEnded;
+    }, BETFAIR_URL);
+    if(events.length > 0) {// event has NOT ended
+      console.log('event has NOT ended...');
+      return setTimeout(checkEventEnd, 300000);
+    } else {
+      console.log('event has ended...');
+      return process.exit(0);
+    }
+  }
+
+  return checkEventEnd();
+}
+
 // execute
 
 connectToDB()
@@ -319,4 +367,14 @@ connectToDB()
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
   })
+  .then(ok => {
+    console.log('ready to listen for event ended');
+    return listenForCloseEvent();
+  })/*
+  .then(ok => {
+    if(ok) {
+      console.log('selection has ended...');
+      return process.exit(0);
+    }
+  })*/
   .catch(err => console.error(err));
