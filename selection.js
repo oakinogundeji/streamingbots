@@ -337,10 +337,10 @@ async function listenForCloseEvent() {
       return eventNotEnded;
     }, BETFAIR_URL);
     if(events.length > 0) {// event has NOT ended
-      console.log('event has NOT ended...');
+      console.log(`event has NOT ended for ${SELECTION}...`);
       return setTimeout(checkEventEnd, 300000);
     } else {
-      console.log('event has ended...');
+      console.log(`event has ended for ${SELECTION}...`);
       return process.exit(0);
     }
   }
