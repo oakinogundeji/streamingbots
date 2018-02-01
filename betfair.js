@@ -15,13 +15,13 @@ const
   LOGIN_URL = 'https://www.betfair.com/sport',
   EMAIL = process.env.EMAIL,
   PWD = process.env.BETFAIR_PWD,
-  RACE_URL = process.env.BETFAIR_URL,
-  RUNNER = process.argv[2],
+  EVENT_URL = process.env.BETFAIR_URL,
+  SELECTION = process.argv[2],
   EMAIL_SELECTOR = '#login-dialog-username-input',
   PWD_SELECTOR = '#login-dialog-password-input',
   ACCESS_LOGIN_SELECTOR = '#betslip-container > div > div > div.pane.active > div > div > div > ng-include > ng-include:nth-child(1) > div.open-selection-text > p.selection-text.highlighted > span',
   LOGIN_BTN_SELECTOR = 'body > ng-on-http-stable > ng-transclude > div.login-dialog > div > div > div > div > section > form > div:nth-child(10) > input',
-  RACES_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.market-settings-space.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper';
+  SELECTIONS_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.market-settings-space.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper';
 
 
 // define scraper function
@@ -38,8 +38,8 @@ async function bot() {
   await page.setViewport({width: 1366, height: 768});
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
-  // navigate to RACE_URL
-  await page.goto(RACE_URL, {
+  // navigate to EVENT_URL
+  await page.goto(EVENT_URL, {
     waitUntil: 'networkidle2',
     timeout: 180000
   });
@@ -61,14 +61,14 @@ async function bot() {
   await page.click(LOGIN_BTN_SELECTOR);
   await page.waitFor(30*1000);
   // ensure race container selector available
-  await page.waitForSelector(RACES_CONTAINER_SELECTOR, {
+  await page.waitForSelector(SELECTIONS_CONTAINER_SELECTOR, {
     timeout: 180000
   });
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to , bets etc
-  await page.$eval(RACES_CONTAINER_SELECTOR,
-    (target, RUNNER) => {
+  await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
+    (target, SELECTION) => {
       target.addEventListener('DOMSubtreeModified', function (e) {
         // check for most common element of back and lay as source of event
         if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
@@ -78,7 +78,7 @@ async function bot() {
             odds,
             liquidity;
           // check if delta is for runner
-          if(e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0] == RUNNER) {
+          if(e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0] == SELECTION) {
           // check if back or lay
           if(e.target.parentElement.parentElement.classList[0] == 'back') { // BACK
             if(e.target.parentElement.parentElement.className == 'back mv-bet-button back-button back-selection-button') {
@@ -153,7 +153,7 @@ async function bot() {
         }
       }
     );
-  }, RUNNER);
+  }, SELECTION);
 }
 
 // execute scraper
