@@ -108,77 +108,85 @@ function spawnBots() {
 }
 
 function spawnBetfairBot() {
-  console.log(`Spawning Betfair BOT for ${SELECTION}`);
-  const BETFAIR = spawn('node', ['./betfair.js', SELECTION]);
+  try {
+    console.log(`Spawning Betfair BOT for ${SELECTION}`);
+    const BETFAIR = spawn('node', ['./betfair.js', SELECTION]);
 
-  // listen for data
+    // listen for data
 
-  BETFAIR.stdout.on('data', data => {
-    console.log(`data from betfair bot for ${SELECTION}`);
-    const dataObj = JSON.parse(data.toString());
-    console.log(dataObj);
-    checkForArbs('betfair', dataObj);
-    return saveData('betfair', dataObj);
-  });
+    BETFAIR.stdout.on('data', data => {
+      console.log(`data from betfair bot for ${SELECTION}`);
+      const dataObj = JSON.parse(data.toString());
+      console.log(dataObj);
+      checkForArbs('betfair', dataObj);
+      return saveData('betfair', dataObj);
+    });
 
-  BETFAIR.stderr.on('data', err => {
-    console.error(`BETFAIR err for ${SELECTION}...`);
-    console.error(err.toString());
-    console.log(`respawning Betfair BOT for ${SELECTION}`);
-    return spawnBetfairBot();
-  });
+    BETFAIR.stderr.on('data', err => {
+      console.error(`BETFAIR err for ${SELECTION}...`);
+      console.error(err.toString());
+      throw err.toString();
+    });
 
-  BETFAIR.on('error', err => {
-    console.error(`BETFAIR CP err for ${SELECTION}...`);
+    BETFAIR.on('error', err => {
+      console.error(`BETFAIR CP err for ${SELECTION}...`);
+      console.error(err);
+      throw err;
+    });
+
+    BETFAIR.on('close', code => {
+      if(code < 1) {
+        return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
+      } else {
+        return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
+      }
+    });
+  } catch(err) {
     console.error(err);
     console.log(`respawning Betfair BOT for ${SELECTION}`);
     return spawnBetfairBot();
-  });
-
-  BETFAIR.on('close', code => {
-    if(code < 1) {
-      return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
-    } else {
-      return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
-    }
-  });
+  }
 }
 
 function spawnSmarketsBot() {
-  console.log(`Spawning Smarkets BOT for ${SELECTION}`);
-  const SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
+  try {
+    console.log(`Spawning Smarkets BOT for ${SELECTION}`);
+    const SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
 
-  // listen for data
+    // listen for data
 
-  SMARKETS.stdout.on('data', data => {
-    console.log(`data from smarkets bot for ${SELECTION}`);
-    const dataObj = JSON.parse(data.toString());
-    console.log(dataObj);
-    checkForArbs('smarkets', dataObj);
-    return saveData('smarkets', dataObj);
-  });
+    SMARKETS.stdout.on('data', data => {
+      console.log(`data from smarkets bot for ${SELECTION}`);
+      const dataObj = JSON.parse(data.toString());
+      console.log(dataObj);
+      checkForArbs('smarkets', dataObj);
+      return saveData('smarkets', dataObj);
+    });
 
-  SMARKETS.stderr.on('data', err => {
-    console.error(`SMARKETS err for ${SELECTION}...`);
-    console.error(err.toString());
-    console.log(`respawning Smarkets BOT for ${SELECTION}`);
-    return spawnSmarketsBot();
-  });
+    SMARKETS.stderr.on('data', err => {
+      console.error(`SMARKETS err for ${SELECTION}...`);
+      console.error(err.toString());
+      throw err.toString();
+    });
 
-  SMARKETS.on('error', err => {
-    console.error(`SMARKETS CP err for ${SELECTION}...`);
+    SMARKETS.on('error', err => {
+      console.error(`SMARKETS CP err for ${SELECTION}...`);
+      console.error(err);
+      throw err;
+    });
+
+    SMARKETS.on('close', code => {
+      if(code < 1) {
+        return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
+      } else {
+        return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
+      }
+    });
+  } catch(err) {
     console.error(err);
     console.log(`respawning Smarkets BOT for ${SELECTION}`);
     return spawnSmarketsBot();
-  });
-
-  SMARKETS.on('close', code => {
-    if(code < 1) {
-      return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
-    } else {
-      return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
-    }
-  });
+  }
 }
 
 async function saveData(exchange, data) {

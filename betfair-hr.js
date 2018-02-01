@@ -21,7 +21,7 @@ const
   PWD_SELECTOR = '#login-dialog-password-input',
   ACCESS_LOGIN_SELECTOR = '#betslip-container > div > div > div.pane.active > div > div > div > ng-include > ng-include:nth-child(1) > div.open-selection-text > p.selection-text.highlighted > span',
   LOGIN_BTN_SELECTOR = 'body > ng-on-http-stable > ng-transclude > div.login-dialog > div > div > div > div > section > form > div:nth-child(10) > input',
-  SELECTIONS_CONTAINER_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.market-settings-space.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.main-mv-runners-list-wrapper';
+  SELECTIONS_CONTAINER_SELECTOR = 'div.main-mv-runners-list-wrapper';
 
 
 // define scraper function
