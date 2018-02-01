@@ -13,13 +13,13 @@ const
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
   SMARKETS_URL = process.env.SMARKETS_URL,
-  SMARKETS_RACES_CONTAINER_SELECTOR = 'ul.contracts',
+  SMARKETS_EVENTS_CONTAINER_SELECTOR = 'ul.contracts',
   SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info.-horse-racing',
-  SMARKETS_RACE_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
+  SMARKETS_EVENT_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
   SMARKETS_TIME_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.info.-upcoming > div.event-badges > span';
 let
   selectionsList,
-  RACE_LABEL,
+  EVENT_LABEL,
   TIME_LABEL;
 // helper functions
 
@@ -40,13 +40,13 @@ async function getRunners() {
     timeout: 180000
   });
   // ensure race container selector available
-  await page.waitForSelector(SMARKETS_RACES_CONTAINER_SELECTOR);
+  await page.waitForSelector(SMARKETS_EVENTS_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
-  console.log('SMARKETS_RACES_CONTAINER_SELECTOR found, continuing...');
-  // get RACE_LABEL
-  RACE_LABEL = await page.$eval(SMARKETS_RACE_LABEL_SELECTOR, target => target.innerText);
-  console.log(`RACE_LABEL: ${RACE_LABEL}`);
+  console.log('SMARKETS_EVENTS_CONTAINER_SELECTOR found, continuing...');
+  // get EVENT_LABEL
+  EVENT_LABEL = await page.$eval(SMARKETS_EVENT_LABEL_SELECTOR, target => target.innerText);
+  console.log(`EVENT_LABEL: ${EVENT_LABEL}`);
   // get TIME_LABEL
   TIME_LABEL = await page.$eval(SMARKETS_TIME_LABEL_SELECTOR, target => target.innerText);
   console.log(`TIME_LABEL: ${TIME_LABEL}`);
@@ -55,9 +55,9 @@ async function getRunners() {
     let selectionsList = [];
     targets.filter(target => {
       if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
-        const runner = target.children[1].children[0].innerText;
-        console.log(`runner info: ${runner}`);
-        return selectionsList.push(runner);
+        const selection = target.children[1].children[0].innerText;
+        console.log(`selection info: ${selection}`);
+        return selectionsList.push(selection);
       }
     });
     return selectionsList;
@@ -69,19 +69,19 @@ async function getRunners() {
 async function createEventCard() {
 
   // setup
-  /*const eventLabel = crypto.createHash('md5').update(RACE_LABEL).digest('hex');*/
+  /*const eventLabel = crypto.createHash('md5').update(EVENT_LABEL).digest('hex');*/
   let
     distanceIndex,
     padding;
-  const venue = RACE_LABEL.split('/')[0].split('-')[1].trim();
+  const venue = EVENT_LABEL.split('/')[0].split('-')[1].trim();
   const timeString = TIME_LABEL.split('-')[0].trim();
   const timeStringLength = timeString.length;
-  const raceDateTime = timeString.slice(0, timeStringLength - 3).trim();
-  const raceDateTimeArr = raceDateTime.split(',');
-  const raceTime = raceDateTimeArr.pop().trim();
-  const eventLabel = venue +' - '+ raceTime;
-  const raceDate = raceDateTimeArr.join(',');
-  const distanceAndType = RACE_LABEL.split('/')[1].trim();
+  const eventDateTime = timeString.slice(0, timeStringLength - 3).trim();
+  const eventDateTimeArr = eventDateTime.split(',');
+  const eventTime = eventDateTimeArr.pop().trim();
+  const eventLabel = venue +' - '+ eventTime;
+  const eventDate = eventDateTimeArr.join(',');
+  const distanceAndType = EVENT_LABEL.split('/')[1].trim();
   if(distanceAndType.includes('yards')) {
     distanceIndex = distanceAndType.indexOf('yards');
     padding = 'yards'.length;
@@ -113,15 +113,15 @@ async function createEventCard() {
   let eventCard = {
     eventLabel,
     venue,
-    raceTime,
-    raceDate,
+    eventTime,
+    eventDate,
     raceType,
     distance,
     country: 'GB',
     sport: 'HR',
     outcome: 'WIN'
   };
-  if(RACE_LABEL.toLowerCase().includes('handicap')) {
+  if(EVENT_LABEL.toLowerCase().includes('handicap')) {
     eventCard.handicap = true;
   }
   console.log('eventCard');
@@ -129,21 +129,21 @@ async function createEventCard() {
   const collectionName = eventCard.sport;
 
   // confirm that EVENT Card does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, raceDate: raceDate});
+  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, eventDate: eventDate});
 
   if(!alreadyExists) {
     let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
 
     if(row.result.ok) {
       console.log('EVENT Card created...');
-      return Promise.resolve({eventLabel, raceDate, collectionName});
+      return Promise.resolve({eventLabel, eventDate, collectionName});
     } else {
       const newErr = new Error('EVENT Card NOT created');
       return Promise.reject(newErr);
     }
   } else {
     console.log('EVENT Card already exists...');
-    return Promise.resolve({eventLabel, raceDate, collectionName});
+    return Promise.resolve({eventLabel, eventDate, collectionName});
   }
 }
 
@@ -193,8 +193,8 @@ connectToDB()
   .then(eventIdentifiers => {
     console.log('all good...');
     console.log('launching SELECTIONs...');
-    // create 1 SELECTION per runner
+    // create 1 SELECTION per selection
     return forkSelection(selectionsList[0], eventIdentifiers);
-    //return selectionsList.forEach(runner => forkSelection(runner, eventIdentifiers));
+    //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
   })
   .catch(err => console.error(err));

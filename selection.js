@@ -11,7 +11,7 @@ const
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
   COLLECTION = eventIdentifiers.collectionName,
-  RACE_DATE = eventIdentifiers.raceDate,
+  EVENT_DATE = eventIdentifiers.eventDate,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
@@ -45,7 +45,7 @@ async function connectToDB () {
 async function createSelectionDeltaDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
-    raceDate: RACE_DATE,
+    eventDate: EVENT_DATE,
     selection: SELECTION,
     flag: 'deltas',
     b: [],
@@ -53,7 +53,7 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
 
@@ -74,14 +74,14 @@ async function createSelectionDeltaDoc() {
 async function createSelectionArbsDoc() {
   let selectionArbsDoc = {
     eventLabel: EVENT_LABEL,
-    raceDate: RACE_DATE,
+    eventDate: EVENT_DATE,
     selection: SELECTION,
     flag: 'arbs',
     arbs: []
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'arbs'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'arbs'});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionArbsDoc);
 
@@ -102,12 +102,16 @@ async function createSelectionArbsDoc() {
 function spawnBots() {
   // spawn the BOTS
   console.log(`spawning 2 bots for ${SELECTION}`);
+  spawnBetfairBot();
+  spawnSmarketsBot();
+  return true;
+}
 
-const
-  BETFAIR = spawn('node', ['./betfair.js', SELECTION]),
-  SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
+function spawnBetfairBot() {
+  console.log(`Spawning Betfair BOT for ${SELECTION}`);
+  const BETFAIR = spawn('node', ['./betfair.js', SELECTION]);
 
-    // listen for data
+  // listen for data
 
   BETFAIR.stdout.on('data', data => {
     console.log(`data from betfair bot for ${SELECTION}`);
@@ -116,14 +120,21 @@ const
     checkForArbs('betfair', dataObj);
     return saveData('betfair', dataObj);
   });
+
   BETFAIR.stderr.on('data', err => {
     console.error(`BETFAIR err for ${SELECTION}...`);
-    return console.error(err.toString());
+    console.error(err.toString());
+    console.log(`respawning Betfair BOT for ${SELECTION}`);
+    return spawnBetfairBot();
   });
+
   BETFAIR.on('error', err => {
     console.error(`BETFAIR CP err for ${SELECTION}...`);
-    return console.error(err);
+    console.error(err);
+    console.log(`respawning Betfair BOT for ${SELECTION}`);
+    return spawnBetfairBot();
   });
+
   BETFAIR.on('close', code => {
     if(code < 1) {
       return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
@@ -131,6 +142,13 @@ const
       return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
     }
   });
+}
+
+function spawnSmarketsBot() {
+  console.log(`Spawning Smarkets BOT for ${SELECTION}`);
+  const SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
+
+  // listen for data
 
   SMARKETS.stdout.on('data', data => {
     console.log(`data from smarkets bot for ${SELECTION}`);
@@ -139,14 +157,21 @@ const
     checkForArbs('smarkets', dataObj);
     return saveData('smarkets', dataObj);
   });
+
   SMARKETS.stderr.on('data', err => {
     console.error(`SMARKETS err for ${SELECTION}...`);
-    return console.error(err.toString());
+    console.error(err.toString());
+    console.log(`respawning Smarkets BOT for ${SELECTION}`);
+    return spawnSmarketsBot();
   });
+
   SMARKETS.on('error', err => {
     console.error(`SMARKETS CP err for ${SELECTION}...`);
-    return console.error(err);
+    console.error(err);
+    console.log(`respawning Smarkets BOT for ${SELECTION}`);
+    return spawnSmarketsBot();
   });
+
   SMARKETS.on('close', code => {
     if(code < 1) {
       return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
@@ -154,8 +179,6 @@ const
       return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
     }
   });
-
-  return true;
 }
 
 async function saveData(exchange, data) {
@@ -170,7 +193,7 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
       b: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -184,7 +207,7 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
       s: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -294,7 +317,7 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, raceDate: RACE_DATE, selection: SELECTION, flag: 'arbs'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -332,7 +355,7 @@ async function listenForCloseEvent() {
     const events = await page.$$eval(EVENT_LINKS_SELECTOR, (events, BETFAIR_URL) => {
       console.log('querying for events...');
       const eventNotEnded = events.filter(event => event.href == BETFAIR_URL);
-      console.log('eventNotEnded...');
+      console.log('eventNotEnded obj...');
       console.log(eventNotEnded);
       return eventNotEnded;
     }, BETFAIR_URL);
