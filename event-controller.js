@@ -10,17 +10,19 @@ const
   P = require('puppeteer'),
   Promise = require('bluebird'),
   MongoClient = require('mongodb').MongoClient,
+  moment = require('moment'),
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_EVENTS_CONTAINER_SELECTOR = 'ul.contracts',
-  SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info.-horse-racing',
-  SMARKETS_EVENT_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
-  SMARKETS_TIME_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.info.-upcoming > div.event-badges > span';
+  SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info';
+  //SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info.-horse-racing',
+  /*SMARKETS_EVENT_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.content.-horse-racing > h1 > span',
+  SMARKETS_TIME_LABEL_SELECTOR = '#main-content > main > div > div.event-header.-horse-racing > div > div > div.info.-upcoming > div.event-badges > span';*/
 let
-  selectionsList,
-  EVENT_LABEL,
-  TIME_LABEL;
+  selectionsList;
+  /*EVENT_LABEL,
+  TIME_LABEL;*/
 // helper functions
 
 async function getRunners() {
@@ -44,12 +46,13 @@ async function getRunners() {
   // allow 'page' instance to output any calls to browser log to node log
   page.on('console', data => console.log(data.text()));
   console.log('SMARKETS_EVENTS_CONTAINER_SELECTOR found, continuing...');
+  /*
   // get EVENT_LABEL
   EVENT_LABEL = await page.$eval(SMARKETS_EVENT_LABEL_SELECTOR, target => target.innerText);
   console.log(`EVENT_LABEL: ${EVENT_LABEL}`);
   // get TIME_LABEL
   TIME_LABEL = await page.$eval(SMARKETS_TIME_LABEL_SELECTOR, target => target.innerText);
-  console.log(`TIME_LABEL: ${TIME_LABEL}`);
+  console.log(`TIME_LABEL: ${TIME_LABEL}`);*/
   // get list of horses
   selectionsList = await page.$$eval(SMARKETS_SELECTIONS_SELECTOR, targets => {
     let selectionsList = [];
@@ -69,81 +72,47 @@ async function getRunners() {
 async function createEventCard() {
 
   // setup
-  /*const eventLabel = crypto.createHash('md5').update(EVENT_LABEL).digest('hex');*/
   let
-    distanceIndex,
-    padding;
-  const venue = EVENT_LABEL.split('/')[0].split('-')[1].trim();
-  const timeString = TIME_LABEL.split('-')[0].trim();
-  const timeStringLength = timeString.length;
-  const eventDateTime = timeString.slice(0, timeStringLength - 3).trim();
-  const eventDateTimeArr = eventDateTime.split(',');
-  const eventTime = eventDateTimeArr.pop().trim();
-  const eventLabel = venue +' - '+ eventTime;
-  const eventDate = eventDateTimeArr.join(',');
-  const distanceAndType = EVENT_LABEL.split('/')[1].trim();
-  if(distanceAndType.includes('yards')) {
-    distanceIndex = distanceAndType.indexOf('yards');
-    padding = 'yards'.length;
-  } else if(distanceAndType.includes('yard')) {
-    distanceIndex = distanceAndType.indexOf('yard');
-    padding = 'yard'.length;
-  } else if(distanceAndType.includes('furlongs')) {
-    distanceIndex = distanceAndType.indexOf('furlongs');
-    padding = 'furlongs'.length;
-  } else if(distanceAndType.includes('furlong')) {
-    distanceIndex = distanceAndType.indexOf('furlong');
-    padding = 'furlong'.length;
-  } else if(distanceAndType.includes('miles')) {
-    distanceIndex = distanceAndType.indexOf('miles');
-    padding = 'miles'.length;
+    sport,
+    eventLabel,
+    timeLabel = moment().format('L');
+  timeLabel = timeLabel.split('/').reverse().join('-');
+  let URL_ARR = SMARKETS_URL.split('/');
+  sport = URL_ARR[6];
+  if(sport == 'horse-racing' ) {
+    const EVENT_ARR = URL_ARR.slice(7);
+    eventLabel = EVENT_ARR[0] +'|'+ EVENT_ARR[1] +'-'+ EVENT_ARR[2] +'-'+ EVENT_ARR[3] +' '+ EVENT_ARR[4];
   } else {
-    distanceIndex = distanceAndType.indexOf('mile');
-    padding = 'mile'.length;
+    const eventName = URL_ARR.pop();
+    eventLabel = eventName +'|'+ timeLabel;
   }
-  let raceType = distanceAndType.slice(distanceIndex + padding);
-  raceType = raceType.trim();
-  if(raceType.toLowerCase().includes('handicap')) {
-    raceType = raceType.toLowerCase();
-    raceType = raceType.replace('handicap', ' ');
-    raceType = raceType.trim();
-  }
-  const distance = distanceAndType.slice(0, distanceIndex + padding);
   // create initial EVENT Card
   let eventCard = {
     eventLabel,
-    venue,
-    eventTime,
-    eventDate,
-    raceType,
-    distance,
+    sport,
     country: 'GB',
-    sport: 'HR',
     outcome: 'WIN'
   };
-  if(EVENT_LABEL.toLowerCase().includes('handicap')) {
-    eventCard.handicap = true;
-  }
   console.log('eventCard');
   console.log(eventCard);
   const collectionName = eventCard.sport;
 
   // confirm that EVENT Card does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel, eventDate: eventDate});
+  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel});
 
   if(!alreadyExists) {
     let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
 
     if(row.result.ok) {
       console.log('EVENT Card created...');
-      return Promise.resolve({eventLabel, eventDate, collectionName});
+      return Promise.resolve({eventLabel, collectionName});
     } else {
       const newErr = new Error('EVENT Card NOT created');
       return Promise.reject(newErr);
     }
   } else {
     console.log('EVENT Card already exists...');
-    return Promise.resolve({eventLabel, eventDate, collectionName});
+    return Promise.resolve({eventLabel, collectionName});
   }
 }
 

@@ -11,7 +11,6 @@ const
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
   COLLECTION = eventIdentifiers.collectionName,
-  EVENT_DATE = eventIdentifiers.eventDate,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
@@ -23,6 +22,9 @@ let arbTrigger = {
   betfair: {l0: null, liquidity: null},
   smarkets: {l0: null, liquidity: null}
 };
+
+let BETFAIR;
+let SMARKETS;
 
 
 // helper functions
@@ -45,7 +47,6 @@ async function connectToDB () {
 async function createSelectionDeltaDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
-    eventDate: EVENT_DATE,
     selection: SELECTION,
     flag: 'deltas',
     b: [],
@@ -53,7 +54,7 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
 
@@ -74,14 +75,13 @@ async function createSelectionDeltaDoc() {
 async function createSelectionArbsDoc() {
   let selectionArbsDoc = {
     eventLabel: EVENT_LABEL,
-    eventDate: EVENT_DATE,
     selection: SELECTION,
     flag: 'arbs',
     arbs: []
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'arbs'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionArbsDoc);
 
@@ -108,85 +108,100 @@ function spawnBots() {
 }
 
 function spawnBetfairBot() {
-  try {
-    console.log(`Spawning Betfair BOT for ${SELECTION}`);
-    const BETFAIR = spawn('node', ['./betfair.js', SELECTION]);
+  if(SELECTION.toLowerCase() == 'draw') {
+    SELECTION = 'The Draw';
+  }
+  console.log(`Spawning Betfair BOT for ${SELECTION}`);
+  if(COLLECTION == 'horse-racing') {
+    BETFAIR = spawn('node', ['./betfair-hr.js', SELECTION]);
+  } else {
+    BETFAIR = spawn('node', ['./betfair-generic.js', SELECTION]);
+  }
 
-    // listen for data
+  // listen for data
 
-    BETFAIR.stdout.on('data', data => {
+  BETFAIR.stdout.on('data', data => {
+    try {
       console.log(`data from betfair bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
       checkForArbs('betfair', dataObj);
       return saveData('betfair', dataObj);
-    });
-
-    BETFAIR.stderr.on('data', err => {
-      console.error(`BETFAIR err for ${SELECTION}...`);
-      console.error(err.toString());
-      throw err.toString();
-    });
-
-    BETFAIR.on('error', err => {
-      console.error(`BETFAIR CP err for ${SELECTION}...`);
+    } catch(err) {
       console.error(err);
-      throw err;
-    });
+      console.log(`terminating existing Betfair BOT for ${SELECTION}`);
+      process.kill(BETFAIR.pid);
+      console.log(`respawning Betfair BOT for ${SELECTION}`);
+      return spawnBetfairBot();
+    }
+  });
 
-    BETFAIR.on('close', code => {
-      if(code < 1) {
-        return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
-      } else {
-        return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
-      }
-    });
-  } catch(err) {
+  BETFAIR.stderr.on('data', err => {
+    console.error(`BETFAIR err for ${SELECTION}...`);
+    console.error(err.toString());
+    throw err.toString();
+  });
+
+  BETFAIR.on('error', err => {
+    console.error(`BETFAIR CP err for ${SELECTION}...`);
     console.error(err);
-    console.log(`respawning Betfair BOT for ${SELECTION}`);
-    return spawnBetfairBot();
-  }
+    throw err;
+  });
+
+  BETFAIR.on('close', code => {
+    if(code < 1) {
+      return console.log(`BETFAIR BOT for ${SELECTION} closed normally...`);
+    } else {
+      return console.error(`BETFAIR BOT for ${SELECTION} closed abnormally...`);
+    }
+  });
 }
 
 function spawnSmarketsBot() {
-  try {
-    console.log(`Spawning Smarkets BOT for ${SELECTION}`);
-    const SMARKETS = spawn('node', ['./smarkets.js', SELECTION]);
+  console.log(`Spawning Smarkets BOT for ${SELECTION}`);
+  if(COLLECTION == 'horse-racing') {
+    SMARKETS = spawn('node', ['./smarkets-hr.js', SELECTION]);
+  } else {
+    SMARKETS = spawn('node', ['./smarkets-generic.js', SELECTION]);
+  }
 
-    // listen for data
+  // listen for data
 
-    SMARKETS.stdout.on('data', data => {
+  SMARKETS.stdout.on('data', data => {
+    try {
       console.log(`data from smarkets bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
       checkForArbs('smarkets', dataObj);
       return saveData('smarkets', dataObj);
-    });
-
-    SMARKETS.stderr.on('data', err => {
-      console.error(`SMARKETS err for ${SELECTION}...`);
-      console.error(err.toString());
-      throw err.toString();
-    });
-
-    SMARKETS.on('error', err => {
-      console.error(`SMARKETS CP err for ${SELECTION}...`);
+    } catch(err) {
       console.error(err);
-      throw err;
-    });
+      console.log(`terminating existing Smarkets BOT for ${SELECTION}`);
+      process.kill(SMARKETS.pid);
+      console.log(`respawning Smarkets BOT for ${SELECTION}`);
+      return spawnSmarketsBot();
+    }
+  });
 
-    SMARKETS.on('close', code => {
-      if(code < 1) {
-        return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
-      } else {
-        return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
-      }
-    });
-  } catch(err) {
+  SMARKETS.stderr.on('data', err => {
+    console.error(`SMARKETS err for ${SELECTION}...`);
+    console.error(err.toString());
+    throw err.toString();
+  });
+
+  SMARKETS.on('error', err => {
+    console.error(`SMARKETS CP err for ${SELECTION}...`);
     console.error(err);
-    console.log(`respawning Smarkets BOT for ${SELECTION}`);
-    return spawnSmarketsBot();
-  }
+    throw err;
+  });
+
+  SMARKETS.on('close', code => {
+    if(code < 1) {
+      return console.log(`SMARKETS BOT for ${SELECTION} closed normally...`);
+    } else {
+      return console.error(`SMARKETS BOT for ${SELECTION} closed abnormally...`);
+    }
+  });
 }
 
 async function saveData(exchange, data) {
@@ -201,7 +216,7 @@ async function saveData(exchange, data) {
 
 async function saveBetfairData(data) {
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
       b: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -215,7 +230,7 @@ async function saveBetfairData(data) {
 
 async function saveSmarketsData(data) {
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
       s: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -325,7 +340,7 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, eventDate: EVENT_DATE, selection: SELECTION, flag: 'arbs'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -372,6 +387,8 @@ async function listenForCloseEvent() {
       return setTimeout(checkEventEnd, 300000);
     } else {
       console.log(`event has ended for ${SELECTION}...`);
+      process.kill(BETFAIR.pid);
+      process.kill(SMARKETS.pid);
       return process.exit(0);
     }
   }
