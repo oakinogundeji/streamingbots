@@ -25,7 +25,18 @@ let
   TIME_LABEL;*/
 // helper functions
 
-async function getRunners() {
+async function getSelections() {
+  // setup
+  let
+    sport,
+    flag;
+  const URL_ARR = SMARKETS_URL.split('/');
+  sport = URL_ARR[6];
+  if(sport == 'horse-racing' ) {
+    flag = 'HR';
+  } else {
+    flag = 'GENERIC';
+  }
   // instantiate browser
   const browser = await P.launch({
     headless: false,
@@ -54,17 +65,25 @@ async function getRunners() {
   TIME_LABEL = await page.$eval(SMARKETS_TIME_LABEL_SELECTOR, target => target.innerText);
   console.log(`TIME_LABEL: ${TIME_LABEL}`);*/
   // get list of horses
-  selectionsList = await page.$$eval(SMARKETS_SELECTIONS_SELECTOR, targets => {
+  selectionsList = await page.$$eval(SMARKETS_SELECTIONS_SELECTOR, (targets, flag) => {
     let selectionsList = [];
-    targets.filter(target => {
-      if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
-        const selection = target.children[1].children[0].innerText;
-        console.log(`selection info: ${selection}`);
+    if(flag == 'HR') {
+      targets.filter(target => {
+        if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
+          const selection = target.children[1].children[0].innerText;
+          console.log(`selection info for HR: ${selection}`);
+          return selectionsList.push(selection);
+        }
+      });
+    } else {
+      targets.forEach(target => {
+        const selection = target.innerText;
+        console.log(`selection info for GENERIC: ${selection}`);
         return selectionsList.push(selection);
-      }
-    });
+      });
+    }
     return selectionsList;
-  });
+  }, flag);
   await browser.close();
   return Promise.resolve(true);
 }
@@ -151,7 +170,7 @@ connectToDB()
   })
   .then(ok => {
     console.log('getting selections...');
-    return getRunners();
+    return getSelections();
   })
   .then(ok => {
     console.log('selectionsList...');
