@@ -182,7 +182,13 @@ connectToDB()
     console.log('all good...');
     console.log('launching SELECTIONs...');
     // create 1 SELECTION per selection
-    return forkSelection(selectionsList[0], eventIdentifiers);
-    //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+    if(eventIdentifiers.collectionName != 'horse-racing') {
+      eventIdentifiers.targets = selectionsList.filter(selection => selection.toLowerCase() != 'draw');
+      return forkSelection(selectionsList[0], eventIdentifiers);
+      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+    } else {
+      return forkSelection(selectionsList[0], eventIdentifiers);
+      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+    }
   })
   .catch(err => console.error(err));

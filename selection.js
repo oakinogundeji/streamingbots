@@ -11,12 +11,14 @@ const
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
   COLLECTION = eventIdentifiers.collectionName,
+  TARGETS = eventIdentifiers.targets,
   MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
   BETFAIR_URL = process.env.BETFAIR_URL,
   EVENT_END_URL = process.env.EVENT_END_URL,
-  EVENT_LINKS_SELECTOR = 'a.race-link';
+  HR_EVENT_LINKS_SELECTOR = 'a.race-link',
+  GENERIC_EVENT_LINKS_SELECTOR = 'span.event-name';
 
 let arbTrigger = {
   betfair: {l0: null, liquidity: null},
@@ -138,14 +140,12 @@ function spawnBetfairBot() {
 
   BETFAIR.stderr.on('data', err => {
     console.error(`BETFAIR err for ${SELECTION}...`);
-    console.error(err.toString());
-    throw err.toString();
+    return console.error(err.toString());
   });
 
   BETFAIR.on('error', err => {
     console.error(`BETFAIR CP err for ${SELECTION}...`);
-    console.error(err);
-    throw err;
+    return console.error(err);
   });
 
   BETFAIR.on('close', code => {
@@ -185,14 +185,12 @@ function spawnSmarketsBot() {
 
   SMARKETS.stderr.on('data', err => {
     console.error(`SMARKETS err for ${SELECTION}...`);
-    console.error(err.toString());
-    throw err.toString();
+    return console.error(err.toString());
   });
 
   SMARKETS.on('error', err => {
     console.error(`SMARKETS CP err for ${SELECTION}...`);
-    console.error(err);
-    throw err;
+    return console.error(err);
   });
 
   SMARKETS.on('close', code => {
@@ -352,7 +350,62 @@ async function saveArbs(data) {
   }
 }
 
-async function listenForCloseEvent() {
+async function listenForCloseEvent(flag) {
+  if(flag == 'HR') {
+    return listenForHREventClose();
+  } else {
+    return listenForGenericEventClose();
+  }
+}
+
+async function listenForHREventClose() {
+  // instantiate browser
+  const browser = await P.launch({
+    headless: true,
+    timeout: 180000
+  });
+  // create blank page
+  const page = await browser.newPage();
+  // set viewport to 1366*768
+  await page.setViewport({width: 1366, height: 768});
+  // set the user agent
+  await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
+  // navigate to RACE_URL
+  await page.goto(EVENT_END_URL, {
+    waitUntil: 'networkidle2',
+    timeout: 180000
+  });
+  // wait for 30 secs
+  await page.waitFor(30*1000);
+  // define checkEventEnd function
+  async function checkEventEnd() {
+    console.log('checkEventEnd invoked...');
+    // get all events on page
+    const events = await page.$$eval(HR_EVENT_LINKS_SELECTOR, (events, BETFAIR_URL) => {
+      console.log('querying for events...');
+      const eventNotEnded = events.filter(event => event.href == BETFAIR_URL);
+      console.log('eventNotEnded obj...');
+      console.log(eventNotEnded);
+      return eventNotEnded;
+    }, BETFAIR_URL);
+    if(events.length > 0) {// event has NOT ended
+      console.log(`event has NOT ended for ${SELECTION}...`);
+      return setTimeout(checkEventEnd, 300000);
+    } else {
+      console.log(`event has ended for ${SELECTION}...`);
+      process.kill(BETFAIR.pid);
+      process.kill(SMARKETS.pid);
+      return process.exit(0);
+    }
+  }
+  return checkEventEnd();
+}
+
+async function listenForGenericEventClose() {
+  const sortedTargetsArray = TARGETS.sort();
+  const sortedTargetsString = sortedTargetsArray.join(', ');
+  console.log('sortedTargetsString');
+  console.log(sortedTargetsString);
   // instantiate browser
   const browser = await P.launch({
     headless: false,
@@ -375,14 +428,32 @@ async function listenForCloseEvent() {
   async function checkEventEnd() {
     console.log('checkEventEnd invoked...');
     // get all events on page
-    const events = await page.$$eval(EVENT_LINKS_SELECTOR, (events, BETFAIR_URL) => {
+    const eventFound = await page.$$eval(GENERIC_EVENT_LINKS_SELECTOR, (events) => {
       console.log('querying for events...');
-      const eventNotEnded = events.filter(event => event.href == BETFAIR_URL);
-      console.log('eventNotEnded obj...');
-      console.log(eventNotEnded);
-      return eventNotEnded;
-    }, BETFAIR_URL);
-    if(events.length > 0) {// event has NOT ended
+      const result = events.map(event => {
+        let eventTargetsArray = event.innerText.split('vs.');
+        let trimmedeventTargetsArray = eventTargetsArray.map(item => item.trim());
+        console.log('trimmedeventTargetsArray');
+        console.log(trimmedeventTargetsArray);
+        trimmedeventTargetsArray.sort();
+        let eventTargetsArraySortedString = trimmedeventTargetsArray.join(', ');
+        eventTargetsArraySortedString = eventTargetsArraySortedString.trim();
+        let eventStatus = event.parentElement.parentElement.children[1].children[0].innerText.toLowerCase();
+        return {
+          label: eventTargetsArraySortedString,
+          status: eventStatus
+        };
+      });
+      console.log('result..');
+      console.log(result);
+      return result;
+    });
+    console.log('eventFound');
+    console.log(eventFound);
+    const ongoing = eventFound.filter(event => event.label == sortedTargetsString);
+    console.log('ongoing');
+    console.log(ongoing);
+    if(ongoing[0].status != 'event ended') {// event has NOT ended
       console.log(`event has NOT ended for ${SELECTION}...`);
       return setTimeout(checkEventEnd, 300000);
     } else {
@@ -392,7 +463,6 @@ async function listenForCloseEvent() {
       return process.exit(0);
     }
   }
-
   return checkEventEnd();
 }
 
@@ -417,7 +487,13 @@ connectToDB()
   })
   .then(ok => {
     console.log('ready to listen for event ended');
-    return listenForCloseEvent();
+    let flag;
+    if(COLLECTION == 'horse-racing') {
+      flag = 'HR';
+    } else {
+      flag = 'GENERIC';
+    }
+    return listenForCloseEvent(flag);
   })/*
   .then(ok => {
     if(ok) {
