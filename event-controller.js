@@ -166,7 +166,7 @@ connectToDB()
     console.log(selectionsList);
     return Promise.resolve(true);
   })
-  .then(ok => createEventCard())/*
+  .then(ok => createEventCard())
   .then(eventIdentifiers => {
     console.log('all good...');
     console.log('launching SELECTIONs...');
@@ -179,5 +179,5 @@ connectToDB()
       return forkSelection(selectionsList[0], eventIdentifiers);
       //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
     }
-  })*/
+  })
   .catch(err => console.error(err));

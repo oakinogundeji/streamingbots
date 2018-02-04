@@ -18,7 +18,15 @@ const
   BETFAIR_URL = process.env.BETFAIR_URL,
   EVENT_END_URL = process.env.EVENT_END_URL,
   HR_EVENT_LINKS_SELECTOR = 'a.race-link',
-  GENERIC_EVENT_LINKS_SELECTOR = 'span.event-name';
+  GENERIC_EVENT_LINKS_SELECTOR = 'span.event-name',
+  EMAIL = process.env.EMAIL,
+  PWD = process.env.SMARKETS_PWD,
+  EVENT_URL = process.env.SMARKETS_URL,
+  ACCESS_LOGIN_SELECTOR = '#header-login',
+  EMAIL_SELECTOR = '#login-form-email',
+  PWD_SELECTOR = '#login-form-password',
+  SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
+  SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button';
 
 let arbTrigger = {
   betfair: {l0: null, liquidity: null},
@@ -424,6 +432,26 @@ async function listenForGenericEventClose() {
   });
   // wait for 30 secs
   await page.waitFor(30*1000);
+  /*
+  // sign in
+  // ensure ACCESS_LOGIN_SELECTOR is available
+  await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
+  // click the button to access login
+  await page.click(ACCESS_LOGIN_SELECTOR);
+  // wait for EMAIL and PWD selectors to be available
+  await page.waitForSelector(EMAIL_SELECTOR);
+  await page.waitForSelector(PWD_SELECTOR);
+  // enter email
+  await page.type(EMAIL_SELECTOR, EMAIL, {delay: 100});
+  await page.waitFor(2*1000);
+  // click show pwd btn
+  await page.click(SHOW_PWD_SELECTOR);
+  //enter password
+  await page.type(PWD_SELECTOR, PWD, {delay: 100});
+  await page.waitFor(2*1000);
+  // click login button
+  await page.click(SIGNIN_BTN_SELECTOR);
+  await page.waitFor(30*1000);*/
   // define checkEventEnd function
   async function checkEventEnd() {
     console.log('checkEventEnd invoked...');
@@ -453,13 +481,17 @@ async function listenForGenericEventClose() {
     const ongoing = eventFound.filter(event => event.label == sortedTargetsString);
     console.log('ongoing');
     console.log(ongoing);
-    if(ongoing[0].status != 'event ended') {// event has NOT ended
+    if(!!ongoing[0] && ongoing[0].status != 'event ended') {// event has NOT ended
       console.log(`event has NOT ended for ${SELECTION}...`);
-      return setTimeout(checkEventEnd, 300000);
+      console.log('closing puppeteer browser and rechecking in 5 mins...');
+      await browser.close();
+      return setTimeout(listenForGenericEventClose, 300000);
     } else {
       console.log(`event has ended for ${SELECTION}...`);
+      console.log('terminating BOTs and selection processes...');
       process.kill(BETFAIR.pid);
       process.kill(SMARKETS.pid);
+      await browser.close();
       return process.exit(0);
     }
   }
