@@ -494,11 +494,5 @@ connectToDB()
       flag = 'GENERIC';
     }
     return listenForCloseEvent(flag);
-  })/*
-  .then(ok => {
-    if(ok) {
-      console.log('selection has ended...');
-      return process.exit(0);
-    }
-  })*/
+  })
   .catch(err => console.error(err));
