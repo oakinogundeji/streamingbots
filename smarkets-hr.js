@@ -132,7 +132,7 @@ async function bot() {
           const data = {
             betType,
             odds,
-            liquidity,
+            liquidity: Number(liquidity.slice(1)),
             timestampFrom: timestamp,
             timestampTo: null
           };
