@@ -28,10 +28,10 @@ const
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
   SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button';
 
-let arbTrigger = {
+/*let arbTrigger = {
   betfair: {l0: null, liquidity: null},
   smarkets: {l0: null, liquidity: null}
-};
+};*/
 
 let
   betfairDeltas = {
@@ -100,7 +100,7 @@ async function createSelectionDeltaDoc() {
   }
 }
 
-async function createSelectionArbsDoc() {
+/*async function createSelectionArbsDoc() {
   let selectionArbsDoc = {
     eventLabel: EVENT_LABEL,
     selection: SELECTION,
@@ -125,7 +125,7 @@ async function createSelectionArbsDoc() {
     console.log(`selectionArbsDoc for ${SELECTION} already exists...`);
     return Promise.resolve(true);
   }
-}
+}*/
 
 function spawnBots() {
   // spawn the BOTS
@@ -153,7 +153,7 @@ function spawnBetfairBot() {
       console.log(`data from betfair bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      checkForArbs('betfair', dataObj);
+      //checkForArbs('betfair', dataObj);
       return saveData('betfair', dataObj);
     } catch(err) {
       console.error(err);
@@ -198,7 +198,7 @@ function spawnSmarketsBot() {
       console.log(`data from smarkets bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      checkForArbs('smarkets', dataObj);
+      //checkForArbs('smarkets', dataObj);
       return saveData('smarkets', dataObj);
     } catch(err) {
       console.error(err);
@@ -286,7 +286,7 @@ async function saveSmarketsData(data) {
   }
 }
 
-function checkForArbs(exchange, data) {
+/*function checkForArbs(exchange, data) {
   if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
     console.log('checkForArbs invoked...');
     console.log(arbTrigger);
@@ -380,9 +380,9 @@ function checkForArbs(exchange, data) {
       }
     }
   }
-}
+}*/
 
-async function saveArbs(data) {
+/*async function saveArbs(data) {
   // push data obj into 'arbs' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
@@ -394,7 +394,7 @@ async function saveArbs(data) {
     const newErr = new Error(`failed to add arbs for ${SELECTION}`);
     return Promise.reject(newErr);
   }
-}
+}*/
 
 async function listenForCloseEvent(flag) {
   if(flag == 'HR') {
@@ -470,26 +470,6 @@ async function listenForGenericEventClose() {
   });
   // wait for 30 secs
   await page.waitFor(30*1000);
-  /*
-  // sign in
-  // ensure ACCESS_LOGIN_SELECTOR is available
-  await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
-  // click the button to access login
-  await page.click(ACCESS_LOGIN_SELECTOR);
-  // wait for EMAIL and PWD selectors to be available
-  await page.waitForSelector(EMAIL_SELECTOR);
-  await page.waitForSelector(PWD_SELECTOR);
-  // enter email
-  await page.type(EMAIL_SELECTOR, EMAIL, {delay: 100});
-  await page.waitFor(2*1000);
-  // click show pwd btn
-  await page.click(SHOW_PWD_SELECTOR);
-  //enter password
-  await page.type(PWD_SELECTOR, PWD, {delay: 100});
-  await page.waitFor(2*1000);
-  // click login button
-  await page.click(SIGNIN_BTN_SELECTOR);
-  await page.waitFor(30*1000);*/
   // define checkEventEnd function
   async function checkEventEnd() {
     console.log('checkEventEnd invoked...');
@@ -550,7 +530,7 @@ connectToDB()
     return Promise.resolve(true);
   })
   .then(ok => createSelectionDeltaDoc())
-  .then(ok => createSelectionArbsDoc())
+  //.then(ok => createSelectionArbsDoc())
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
