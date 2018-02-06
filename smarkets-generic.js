@@ -133,7 +133,8 @@ async function bot() {
             betType,
             odds,
             liquidity,
-            timestamp
+            timestampFrom: timestamp,
+            timestampTo: null
           };
           const output = JSON.stringify(data);
           console.log(output);

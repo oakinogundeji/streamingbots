@@ -33,6 +33,24 @@ let arbTrigger = {
   smarkets: {l0: null, liquidity: null}
 };
 
+let
+  betfairDeltas = {
+    b0: null,
+    b1: null,
+    b2: null,
+    l0: null,
+    l1: null,
+    l2: null
+  },
+  smarketsDeltas = {
+    b0: null,
+    b1: null,
+    b2: null,
+    l0: null,
+    l1: null,
+    l2: null
+  };
+
 let BETFAIR;
 let SMARKETS;
 
@@ -221,6 +239,16 @@ async function saveData(exchange, data) {
 }
 
 async function saveBetfairData(data) {
+  // check if oddsType from bot has already changed
+  if(!betfairDeltas[data.betType]) {// if not update and save in memory
+    betfairDeltas[data.betType] = data;
+  } else if(!betfairDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
+    let timestamp = new Date();
+    timestamp = timestamp.toISOString();
+    data.timestampTo = timestamp;
+    // delete existing in memory object
+    betfairDeltas[data.betType] = null;
+  }
   // push data obj into 'betfair' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
       b: data
@@ -235,6 +263,16 @@ async function saveBetfairData(data) {
 }
 
 async function saveSmarketsData(data) {
+  // check if oddsType from bot has already changed
+  if(!smarketsDeltas[data.betType]) {// if not update and save in memory
+    smarketsDeltas[data.betType] = data;
+  } else if(!smarketsDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
+    let timestamp = new Date();
+    timestamp = timestamp.toISOString();
+    data.timestampTo = timestamp;
+    // delete existing in memory object
+    smarketsDeltasDeltas[data.betType] = null;
+  }
   // push data obj into 'smarkets' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
       s: data
