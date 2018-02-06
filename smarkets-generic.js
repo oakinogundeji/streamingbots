@@ -21,7 +21,8 @@ const
   PWD_SELECTOR = '#login-form-password',
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
   SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  SELECTIONS_CONTAINER_SELECTOR = '#main-content > main > div > div:nth-child(3) > ul > li:nth-child(1)';
+  SELECTIONS_CONTAINER_SELECTOR = '#main-content > main > div > div:nth-child(3) > ul > li:nth-child(1)',
+  MATCHED_AMOUNT_SELECTOR = 'div.contract-group-stats > span > span > span';
 
 
 // define scraper function
@@ -129,9 +130,11 @@ async function bot() {
         if(!!betType && !!odds && !!liquidity) {
           let timestamp = new Date();
           timestamp = timestamp.toISOString();
+          const matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
           const data = {
             betType,
             odds,
+            matchedAmount,
             liquidity: Number(liquidity.slice(1)),
             timestampFrom: timestamp,
             timestampTo: null
