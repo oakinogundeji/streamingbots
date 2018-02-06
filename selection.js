@@ -76,7 +76,6 @@ async function createSelectionDeltaDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
     selection: SELECTION,
-    flag: 'deltas',
     b: [],
     s: []
   };
@@ -104,7 +103,6 @@ async function createSelectionDeltaDoc() {
   let selectionArbsDoc = {
     eventLabel: EVENT_LABEL,
     selection: SELECTION,
-    flag: 'arbs',
     arbs: []
   };
 
