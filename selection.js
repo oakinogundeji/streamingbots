@@ -40,7 +40,8 @@ let
     b2: null,
     l0: null,
     l1: null,
-    l2: null
+    l2: null,
+    matchedAmount: null
   },
   smarketsDeltas = {
     b0: null,
@@ -48,7 +49,8 @@ let
     b2: null,
     l0: null,
     l1: null,
-    l2: null
+    l2: null,
+    matchedAmount: null
   };
 
 let BETFAIR;
@@ -247,6 +249,12 @@ async function saveBetfairData(data) {
     // delete existing in memory object
     betfairDeltas[data.betType] = null;
   }
+  // check if matched amount has changed
+  if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
+  delete data.matchedAmount;
+} else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
+  betfairDeltas.matchedAmount = data.matchedAmount
+  }
   // push data obj into 'betfair' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
       b: data
@@ -269,7 +277,13 @@ async function saveSmarketsData(data) {
     timestamp = timestamp.toISOString();
     data.timestampTo = timestamp;
     // delete existing in memory object
-    smarketsDeltasDeltas[data.betType] = null;
+    smarketsDeltas[data.betType] = null;
+  }
+  // check if matched amount has changed
+  if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
+  delete data.matchedAmount;
+} else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
+  smarketsDeltas.matchedAmount = data.matchedAmount    
   }
   // push data obj into 'smarkets' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
