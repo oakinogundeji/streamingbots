@@ -140,7 +140,8 @@ async function bot() {
             }
           }}
           if(!!betType && !!odds && !!liquidity) {
-            const timestamp = Date.now();
+            let timestamp = new Date();
+            timestamp = timestamp.toISOString();
             const data = {
               betType,
               odds,

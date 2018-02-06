@@ -127,7 +127,8 @@ async function bot() {
           liquidity = e.target.parentElement.parentElement.parentElement.children[1].innerText;
         }
         if(!!betType && !!odds && !!liquidity) {
-          const timestamp = Date.now();
+          let timestamp = new Date();
+          timestamp = timestamp.toISOString();
           const data = {
             betType,
             odds,

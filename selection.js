@@ -369,7 +369,7 @@ async function listenForCloseEvent(flag) {
 async function listenForHREventClose() {
   // instantiate browser
   const browser = await P.launch({
-    headless: true,
+    headless: false,
     timeout: 180000
   });
   // create blank page
