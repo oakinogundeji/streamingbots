@@ -283,7 +283,7 @@ async function saveSmarketsData(data) {
   if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
 } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
-  smarketsDeltas.matchedAmount = data.matchedAmount    
+  smarketsDeltas.matchedAmount = data.matchedAmount
   }
   // push data obj into 'smarkets' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
@@ -448,7 +448,9 @@ async function listenForHREventClose() {
     }, BETFAIR_URL);
     if(events.length > 0) {// event has NOT ended
       console.log(`event has NOT ended for ${SELECTION}...`);
-      return setTimeout(checkEventEnd, 300000);
+      console.log('closing puppeteer browser and rechecking in 5 mins...');
+      await browser.close();
+      return setTimeout(listenForHREventClose, 300000);
     } else {
       console.log(`event has ended for ${SELECTION}...`);
       process.kill(BETFAIR.pid);
