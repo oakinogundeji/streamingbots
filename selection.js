@@ -166,12 +166,20 @@ function spawnBetfairBot() {
 
   BETFAIR.stderr.on('data', err => {
     console.error(`BETFAIR err for ${SELECTION}...`);
-    return console.error(err.toString());
+    console.error(err.toString());
+    console.log(`terminating existing Betfair BOT for ${SELECTION}`);
+    process.kill(BETFAIR.pid);
+    console.log(`respawning Betfair BOT for ${SELECTION}`);
+    return spawnBetfairBot();
   });
 
   BETFAIR.on('error', err => {
     console.error(`BETFAIR CP err for ${SELECTION}...`);
-    return console.error(err);
+    console.error(err);
+    console.log(`terminating existing Betfair BOT for ${SELECTION}`);
+    process.kill(BETFAIR.pid);
+    console.log(`respawning Betfair BOT for ${SELECTION}`);
+    return spawnBetfairBot();
   });
 
   BETFAIR.on('close', code => {
@@ -211,12 +219,20 @@ function spawnSmarketsBot() {
 
   SMARKETS.stderr.on('data', err => {
     console.error(`SMARKETS err for ${SELECTION}...`);
-    return console.error(err.toString());
+    console.error(err.toString());
+    console.log(`terminating existing Smarkets BOT for ${SELECTION}`);
+    process.kill(SMARKETS.pid);
+    console.log(`respawning Smarkets BOT for ${SELECTION}`);
+    return spawnSmarketsBot();
   });
 
   SMARKETS.on('error', err => {
     console.error(`SMARKETS CP err for ${SELECTION}...`);
-    return console.error(err);
+    console.error(err);
+    console.log(`terminating existing Smarkets BOT for ${SELECTION}`);
+    process.kill(SMARKETS.pid);
+    console.log(`respawning Smarkets BOT for ${SELECTION}`);
+    return spawnSmarketsBot();
   });
 
   SMARKETS.on('close', code => {
