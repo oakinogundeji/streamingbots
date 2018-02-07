@@ -83,7 +83,7 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
 
@@ -109,7 +109,7 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'});
+  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
   if(!alreadyExists) {
     let row = await DB_CONN.collection(COLLECTION).insertOne(selectionArbsDoc);
 
@@ -268,11 +268,11 @@ async function saveBetfairData(data) {
   // check if matched amount has changed
   if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
-} else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
+  } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
   betfairDeltas.matchedAmount = data.matchedAmount
   }
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       b: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -298,11 +298,11 @@ async function saveSmarketsData(data) {
   // check if matched amount has changed
   if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
-} else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
+  } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
   smarketsDeltas.matchedAmount = data.matchedAmount
   }
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'deltas'}, {$push: {
+  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       s: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
