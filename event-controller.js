@@ -44,7 +44,7 @@ async function getSelections() {
   // set the user agent
   await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)');
   await page.goto(SMARKETS_URL, {
-    waitUntil: 'networkidle0',
+    waitUntil: 'networkidle2',
     timeout: 180000
   });
   // ensure race container selector available

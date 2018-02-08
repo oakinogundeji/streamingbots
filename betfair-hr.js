@@ -17,10 +17,9 @@ const
   PWD = process.env.BETFAIR_PWD,
   EVENT_URL = process.env.BETFAIR_URL,
   SELECTION = process.argv[2],
-  EMAIL_SELECTOR = '#login-dialog-username-input',
-  PWD_SELECTOR = '#login-dialog-password-input',
-  ACCESS_LOGIN_SELECTOR = '#betslip-container > div > div > div.pane.active > div > div > div > ng-include > ng-include:nth-child(1) > div.open-selection-text > p.selection-text.highlighted > span',
-  LOGIN_BTN_SELECTOR = 'body > ng-on-http-stable > ng-transclude > div.login-dialog > div > div > div > div > section > form > div:nth-child(10) > input',
+  EMAIL_SELECTOR = '#ssc-liu',
+  PWD_SELECTOR = '#ssc-lipw',
+  LOGIN_BTN_SELECTOR = '#ssc-lis',
   SELECTIONS_CONTAINER_SELECTOR = 'div.main-mv-runners-list-wrapper',
   MATCHED_AMOUNT_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.mv-sticky-header > bf-marketview-header-wrapper > div > div > mv-header > div > div > div.mv-secondary-section > div > div > span.total-matched';
 
@@ -44,14 +43,10 @@ async function bot() {
     waitUntil: 'networkidle2',
     timeout: 180000
   });
-  await page.waitFor(10*1000);
-  // ensure ACCESS_LOGIN_SELECTOR is available
-  await page.waitForSelector(ACCESS_LOGIN_SELECTOR);
-  // click ACCESS_LOGIN_SELECTOR button
-  await page.click(ACCESS_LOGIN_SELECTOR);
+  await page.waitFor(30*1000);
   // wait for EMAIL and PWD selectors to be available
-  await page.waitForSelector(EMAIL_SELECTOR);
-  await page.waitForSelector(PWD_SELECTOR);
+  await page.waitForSelector(EMAIL_SELECTOR, {timeout: 30000});
+  await page.waitForSelector(PWD_SELECTOR, {timeout: 30000});
   // enter email
   await page.type(EMAIL_SELECTOR, EMAIL, {delay: 100});
   await page.waitFor(2*1000);
@@ -69,7 +64,7 @@ async function bot() {
   page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to , bets etc
   await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
-    (target, SELECTION) => {
+    (target, SELECTION, MATCHED_AMOUNT_SELECTOR) => {
       target.addEventListener('DOMSubtreeModified', function (e) {
         // check for most common element of back and lay as source of event
         if(e.target.parentElement.parentElement.parentElement.parentElement.className == 'runner-line') {
@@ -158,7 +153,7 @@ async function bot() {
         }
       }
     );
-  }, SELECTION);
+  }, SELECTION, MATCHED_AMOUNT_SELECTOR);
 }
 
 // execute scraper

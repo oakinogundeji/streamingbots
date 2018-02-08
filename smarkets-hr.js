@@ -70,7 +70,7 @@ async function bot() {
   page.on('console', data => console.log(data.text()));
   // bind to races container and lsiten for updates to odds, bets etc
   await page.$eval(SELECTIONS_CONTAINER_SELECTOR,
-    (target, SELECTION) => {
+    (target, SELECTION, MATCHED_AMOUNT_SELECTOR) => {
       target.addEventListener('DOMSubtreeModified', function (e) {
         // define variables
         let
@@ -144,7 +144,7 @@ async function bot() {
         }
       }
     );
-  }, SELECTION);
+  }, SELECTION, MATCHED_AMOUNT_SELECTOR);
 }
 
 // execute scraper
