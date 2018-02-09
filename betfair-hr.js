@@ -138,11 +138,12 @@ async function bot() {
           if(!!betType && !!odds && !!liquidity) {
             let timestamp = new Date();
             timestamp = timestamp.toISOString();
-            const matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
+            let matchedAmount = document.querySelector(MATCHED_AMOUNT_SELECTOR).innerText;
+            matchedAmount = Number(matchedAmount.replace(/\D/g, ''));
             const data = {
               betType,
-              odds,
               matchedAmount,
+              odds: Number(odds),
               liquidity: Number(liquidity.slice(1)),
               timestampFrom: timestamp,
               timestampTo: null

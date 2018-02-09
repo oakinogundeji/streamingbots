@@ -299,7 +299,7 @@ async function saveSmarketsData(data) {
   if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
   } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
-  smarketsDeltas.matchedAmount = data.matchedAmount
+  smarketsDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'smarkets' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
