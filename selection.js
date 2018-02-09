@@ -259,9 +259,8 @@ async function saveBetfairData(data) {
   if(!betfairDeltas[data.betType]) {// if not update and save in memory
     betfairDeltas[data.betType] = data;
   } else if(!betfairDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
-    let timestamp = new Date();
-    timestamp = timestamp.toISOString();
-    data.timestampTo = timestamp;
+    data.timestampTo = data.timestampFrom;
+    data.timestampFrom = betfairDeltas[data.betType].timestampFrom;
     // delete existing in memory object
     betfairDeltas[data.betType] = null;
   }
@@ -269,7 +268,7 @@ async function saveBetfairData(data) {
   if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
   } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
-  betfairDeltas.matchedAmount = data.matchedAmount
+  betfairDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'betfair' array
   const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
@@ -289,9 +288,8 @@ async function saveSmarketsData(data) {
   if(!smarketsDeltas[data.betType]) {// if not update and save in memory
     smarketsDeltas[data.betType] = data;
   } else if(!smarketsDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
-    let timestamp = new Date();
-    timestamp = timestamp.toISOString();
-    data.timestampTo = timestamp;
+    data.timestampTo = data.timestampFrom;
+    data.timestampFrom = smarketsDeltas[data.betType].timestampFrom;
     // delete existing in memory object
     smarketsDeltas[data.betType] = null;
   }
