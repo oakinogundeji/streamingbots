@@ -104,7 +104,7 @@ async function createEventCard() {
   console.log('eventCard...');
   console.log(eventCard);
   // create eventCard for event if NOT exists
-  const query = EventCardModel.findOne({eventLabel: eventLabel});
+  const query = EventCardModel.findOne({eventLabel: eventCard.eventLabel, sport: eventCard.sport});
   const alreadyExists = await query.exec();
   if(!!alreadyExists && (alreadyExists.eventLabel == eventCard.eventLabel)) {
     console.log(`${alreadyExists.eventLabel} already exists...`);

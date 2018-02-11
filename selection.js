@@ -107,10 +107,10 @@ async function createSelectionDeltaDoc() {
 
   // create selectionDoc for selection if NOT exists
   const query = SelectionDocModel.findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
-  const alreadyExists = await query.exec();
-  if(!!alreadyExists && (alreadyExists.eventLabel == selectionDoc.eventLabel) && (alreadyExists.selection == selectionDoc.selection)) {
-    console.log(`${alreadyExists.selection} for ${alreadyExists.eventLabel} already exists...`);
-    console.log(alreadyExists);
+  const foundDoc = await query.exec();
+  if(!!foundDoc && (foundDoc.eventLabel == selectionDoc.eventLabel) && (foundDoc.selection == selectionDoc.selection)) {
+    console.log(`${foundDoc.selection} for ${foundDoc.eventLabel} already exists...`);
+    console.log(foundDoc);
     return Promise.resolve(true);
   } else {
     const newSelectionDoc = new SelectionDocModel(selectionDoc);
@@ -135,8 +135,8 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.SPORT(SPORT).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
-  if(!alreadyExists) {
+  let foundDoc = await DB_CONN.SPORT(SPORT).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
+  if(!foundDoc) {
     let row = await DB_CONN.SPORT(SPORT).insertOne(selectionArbsDoc);
 
     if(row.result.ok) {
@@ -271,14 +271,12 @@ function spawnSmarketsBot() {
 }
 
 async function saveData(exchange, data) {
-  return console.log(exchange);
-  /*
   // check which exchange is reporting the data
   if(exchange == 'betfair') {
     return saveBetfairData(data);
-  } else if(exchange == 'smarkets') {
+  }else if(exchange == 'smarkets') {
     return saveSmarketsData(data);
-  }*/
+  }
 }
 
 async function saveBetfairData(data) {
@@ -298,14 +296,17 @@ async function saveBetfairData(data) {
   betfairDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       b: data
     }});
-  if(addNewData.lastErrorObject.updatedExisting) {
-    console.log(`added new betfair data for ${SELECTION}...`);
+  try{
+    const addedNewBetfairData = await query.exec();
+    console.log('addedNewBetfairData...');
+    console.log(addedNewBetfairData);
     return Promise.resolve(true);
-  } else {
-    const newErr = new Error(`failed to update betfair data for ${SELECTION}...`);
+  } catch(err) {
+    console.error('failed to update new betfair data...');
+    const newErr = new Error(`failed to update new betfair data... for ${SELECTION}`);
     return Promise.reject(newErr);
   }
 }
@@ -327,14 +328,17 @@ async function saveSmarketsData(data) {
   smarketsDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       s: data
     }});
-  if(addNewData.lastErrorObject.updatedExisting) {
-    console.log(`added new smarkets data for ${SELECTION}...`);
+  try{
+    const addedNewSmarketsData = await query.exec();
+    console.log('addedNewSmarketsData...');
+    console.log(addedNewSmarketsData);
     return Promise.resolve(true);
-  } else {
-    const newErr = new Error(`failed to update smarkets data for ${SELECTION}...`);
+  } catch(err) {
+    console.error('failed to update new smarkets data...');
+    const newErr = new Error(`failed to update new smarkets data... for ${SELECTION}`);
     return Promise.reject(newErr);
   }
 }
