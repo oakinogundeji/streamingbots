@@ -12,7 +12,8 @@ const
   mongoose = require('mongoose'),
   moment = require('moment'),
   DBURL = process.env.DBURL,
-  DB = DBURL.split('/')[3],
+  // = DBURL.split('/')[3],
+  EventCardModel = require('./models/event-cards'),
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_EVENTS_CONTAINER_SELECTOR = 'ul.contracts',
   SMARKETS_SELECTIONS_SELECTOR = 'div.contract-info';
@@ -101,26 +102,25 @@ async function createEventCard() {
     country: 'GB',
     outcome: 'WIN'
   };
-  console.log('eventCard');
+  console.log('eventCard...');
   console.log(eventCard);
-  const collectionName = eventCard.sport;
-
-  // confirm that EVENT Card does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(collectionName).findOne({eventLabel: eventLabel});
-
-  if(!alreadyExists) {
-    let row = await DB_CONN.collection(collectionName).insertOne(eventCard);
-
-    if(row.result.ok) {
-      console.log('EVENT Card created...');
-      return Promise.resolve({eventLabel, collectionName});
+  // create eventCard for event if NOT exists
+  const query = EventCardModel.findOne({eventLabel: eventLabel});
+  const alreadyExists = await query.exec();
+  if(!!alreadyExists && (alreadyExists.eventLabel == eventCard.eventLabel)) {
+    console.log(`${alreadyExists.eventLabel} already exists...`);
+    return Promise.resolve({eventLabel: alreadyExists.eventLabel});
+  } else {
+    const newEventCard = new EventCardModel(eventCard);
+    const saveNewEventCard = await newEventCard.save();
+    if(saveNewEventCard.eventLabel == eventCard.eventLabel) {
+      console.log(`successfully created eventCard for ${saveNewEventCard.eventLabel}`);
+      return Promise.resolve({eventLabel: saveNewEventCard.eventLabel});
     } else {
-      const newErr = new Error('EVENT Card NOT created');
+      console.error(`failed to create eventCard for ${eventCard.eventLabel}`);
+      const newErr = new Error(`failed to create eventCard for ${eventCard.eventLabel}`);
       return Promise.reject(newErr);
     }
-  } else {
-    console.log('EVENT Card already exists...');
-    return Promise.resolve({eventLabel, collectionName});
   }
 }
 
@@ -167,19 +167,6 @@ function connectToDB() {
    });
  }
 
-/*async function connectToDB () {
-  let client;
-  try {
-    client = await MongoClient.connect(DBURL);
-  } catch(err) {
-    console.error(err);
-    return process.exit(1);
-  }
-  if(client) {
-    return client;
-  }
-}*/
-
 connectToDB()
   .then(ok => {
     console.log('getting selections...');
@@ -189,8 +176,8 @@ connectToDB()
     console.log('selectionsList...');
     console.log(selectionsList);
     return Promise.resolve(true);
-  })/*
-  .then(ok => createEventCard())
+  })
+  .then(ok => createEventCard())/*
   .then(eventIdentifiers => {
     console.log('all good...');
     console.log('launching SELECTIONs...');

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 mongoose.plugin(require('mongoose-write-stream'));
 //=============================================================================
 // Schema
-const SelectionDocSchema = {
+const SelectionDocSchema = mongoose.Schema({
   eventLabel: {
     type: String,
     required: true
@@ -21,7 +21,7 @@ const SelectionDocSchema = {
     type : Array ,
     default: []
   }
-};
+});
 // create index on 'eventLabel'
 SelectionDocSchema.index({eventLabel: 1});
 // compile to Model

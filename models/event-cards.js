@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 mongoose.plugin(require('mongoose-write-stream'));
 //=============================================================================
 // Schema
-const EventCardSchema = {
+const EventCardSchema = mongoose.Schema({
   eventLabel: {
     type: String,
     required: true
@@ -24,7 +24,7 @@ const EventCardSchema = {
     required: true,
     DEFAULT: 'WIN'
   }
-};
+});
 // create index on 'eventLabel'
 EventCardSchema.index({eventLabel: 1});
 // compile to Model
