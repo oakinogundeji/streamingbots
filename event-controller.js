@@ -12,7 +12,6 @@ const
   mongoose = require('mongoose'),
   moment = require('moment'),
   DBURL = process.env.DBURL,
-  // = DBURL.split('/')[3],
   EventCardModel = require('./models/event-cards'),
   SMARKETS_URL = process.env.SMARKETS_URL,
   SMARKETS_EVENTS_CONTAINER_SELECTOR = 'ul.contracts',
@@ -109,13 +108,13 @@ async function createEventCard() {
   const alreadyExists = await query.exec();
   if(!!alreadyExists && (alreadyExists.eventLabel == eventCard.eventLabel)) {
     console.log(`${alreadyExists.eventLabel} already exists...`);
-    return Promise.resolve({eventLabel: alreadyExists.eventLabel});
+    return Promise.resolve({eventLabel: alreadyExists.eventLabel, sport: sport});
   } else {
     const newEventCard = new EventCardModel(eventCard);
     const saveNewEventCard = await newEventCard.save();
     if(saveNewEventCard.eventLabel == eventCard.eventLabel) {
       console.log(`successfully created eventCard for ${saveNewEventCard.eventLabel}`);
-      return Promise.resolve({eventLabel: saveNewEventCard.eventLabel});
+      return Promise.resolve({eventLabel: saveNewEventCard.eventLabel, sport: sport});
     } else {
       console.error(`failed to create eventCard for ${eventCard.eventLabel}`);
       const newErr = new Error(`failed to create eventCard for ${eventCard.eventLabel}`);
@@ -177,18 +176,24 @@ connectToDB()
     console.log(selectionsList);
     return Promise.resolve(true);
   })
-  .then(ok => createEventCard())/*
+  .then(ok => createEventCard())
   .then(eventIdentifiers => {
     console.log('all good...');
     console.log('launching SELECTIONs...');
     // create 1 SELECTION per selection
-    if(eventIdentifiers.collectionName != 'horse-racing') {
+    if(eventIdentifiers.sport != 'horse-racing') {
       eventIdentifiers.targets = selectionsList.filter(selection => selection.toLowerCase() != 'draw');
-      return forkSelection(selectionsList[0], eventIdentifiers);
-      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+      forkSelection(selectionsList[0], eventIdentifiers);
+      //selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+      return Promise.resolve(true);
     } else {
-      return forkSelection(selectionsList[0], eventIdentifiers);
-      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+      forkSelection(selectionsList[0], eventIdentifiers);
+      //selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
+      return Promise.resolve(true);
     }
-  })*/
+  })
+  .then(ok => {
+    console.log('event-controller closing db connection...');
+    return db.close();
+  })
   .catch(err => console.error(err));
