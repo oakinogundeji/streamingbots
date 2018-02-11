@@ -8,6 +8,7 @@ const
   P = require('puppeteer'),
   Promise = require('bluebird'),
   mongoose = require('mongoose'),
+  SelectionDocModel = require('./models/selection-docs'),
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
@@ -102,22 +103,25 @@ async function createSelectionDeltaDoc() {
     s: []
   };
 
-  // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
-  if(!alreadyExists) {
-    let row = await DB_CONN.collection(COLLECTION).insertOne(selectionDoc);
-
-    if(row.result.ok) {
-      console.log(`selectionDoc created for ${SELECTION}...`);
-      console.log(selectionDoc);
+  // create selectionDoc for selection if NOT exists
+  const query = SelectionDocModel.findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
+  const alreadyExists = await query.exec();
+  if(!!alreadyExists && (alreadyExists.eventLabel == selectionDoc.eventLabel) && (alreadyExists.selection == selectionDoc.selection)) {
+    console.log(`${alreadyExists.selection} for ${alreadyExists.eventLabel} already exists...`);
+    console.log(alreadyExists);
+    return Promise.resolve(true);
+  } else {
+    const newSelectionDoc = new SelectionDocModel(selectionDoc);
+    const saveNewSelectionDoc = await newSelectionDoc.save();
+    if((saveNewSelectionDoc.eventLabel == selectionDoc.eventLabel) && (saveNewSelectionDoc.selection == selectionDoc.selection)) {
+      console.log(`successfully created selectionDoc for ${saveNewSelectionDoc.selection} on ${saveNewSelectionDoc.eventLabel}`);
+      console.log(saveNewSelectionDoc);
       return Promise.resolve(true);
     } else {
-      const newErr = new Error(`selectionDoc NOT created for ${SELECTION}...`);
+      console.error(`failed to create selectionDoc for ${saveNewSelectionDoc.selection} on ${selectionDoc.eventLabel}`);
+      const newErr = new Error(`failed to create selectionDoc for ${saveNewSelectionDoc.selection} on ${selectionDoc.eventLabel}`);
       return Promise.reject(newErr);
     }
-  } else {
-    console.log(`selectionDoc for ${SELECTION} already exists...`);
-    return Promise.resolve(true);
   }
 }
 
@@ -565,18 +569,8 @@ async function listenForGenericEventClose() {
 }
 
 // execute
-connectToDB()/*
-  .then(async (client) => {
-    console.log(`SELECTION for ${SELECTION} successfully connected to ${DBURL}`);
-    console.log(`DB: ${DB}`);
-    const db = client.db(DB);
-    return db;
-  })
-  .then(db => {
-    DB_CONN = db;
-    return Promise.resolve(true);
-  })
-  .then(ok => createSelectionDeltaDoc())
+connectToDB()
+  .then(ok => createSelectionDeltaDoc())/*
   //.then(ok => createSelectionArbsDoc())
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
