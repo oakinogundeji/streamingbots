@@ -12,6 +12,7 @@ const
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
+  SPORT = eventIdentifiers.sport,
   TARGETS = eventIdentifiers.targets,
   DBURL = process.env.DBURL,
   BETFAIR_URL = process.env.BETFAIR_URL,
@@ -66,7 +67,8 @@ const options = {
   reconnectInterval: 500,
   poolSize: 10,
   socketTimeoutMS: 0,
-  keepAlive: true
+  keepAlive: true,
+  autoIndex: false
 };
 
 process.on('SIGINT', () => {
@@ -133,9 +135,9 @@ async function createSelectionDeltaDoc() {
   };
 
   // confirm that selectionDoc does not yet exist on dBase
-  let alreadyExists = await DB_CONN.collection(COLLECTION).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
+  let alreadyExists = await DB_CONN.SPORT(SPORT).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
   if(!alreadyExists) {
-    let row = await DB_CONN.collection(COLLECTION).insertOne(selectionArbsDoc);
+    let row = await DB_CONN.SPORT(SPORT).insertOne(selectionArbsDoc);
 
     if(row.result.ok) {
       console.log(`selectionArbsDoc created for ${SELECTION}...`);
@@ -164,7 +166,7 @@ function spawnBetfairBot() {
     SELECTION = 'The Draw';
   }
   console.log(`Spawning Betfair BOT for ${SELECTION}`);
-  if(COLLECTION == 'horse-racing') {
+  if(SPORT == 'horse-racing') {
     BETFAIR = spawn('node', ['./betfair-hr.js', SELECTION]);
   } else {
     BETFAIR = spawn('node', ['./betfair-generic.js', SELECTION]);
@@ -217,7 +219,7 @@ function spawnBetfairBot() {
 
 function spawnSmarketsBot() {
   console.log(`Spawning Smarkets BOT for ${SELECTION}`);
-  if(COLLECTION == 'horse-racing') {
+  if(SPORT == 'horse-racing') {
     SMARKETS = spawn('node', ['./smarkets-hr.js', SELECTION]);
   } else {
     SMARKETS = spawn('node', ['./smarkets-generic.js', SELECTION]);
@@ -269,13 +271,14 @@ function spawnSmarketsBot() {
 }
 
 async function saveData(exchange, data) {
-
+  return console.log(exchange);
+  /*
   // check which exchange is reporting the data
   if(exchange == 'betfair') {
     return saveBetfairData(data);
   } else if(exchange == 'smarkets') {
     return saveSmarketsData(data);
-  }
+  }*/
 }
 
 async function saveBetfairData(data) {
@@ -295,7 +298,7 @@ async function saveBetfairData(data) {
   betfairDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'betfair' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       b: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -324,7 +327,7 @@ async function saveSmarketsData(data) {
   smarketsDeltas.matchedAmount = data.matchedAmount;
   }
   // push data obj into 'smarkets' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       s: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -434,7 +437,7 @@ async function saveSmarketsData(data) {
 
 /*async function saveArbs(data) {
   // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.collection(COLLECTION).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
+  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
     }});
   if(addNewData.lastErrorObject.updatedExisting) {
@@ -570,16 +573,16 @@ async function listenForGenericEventClose() {
 
 // execute
 connectToDB()
-  .then(ok => createSelectionDeltaDoc())/*
+  .then(ok => createSelectionDeltaDoc())
   //.then(ok => createSelectionArbsDoc())
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
-  })
+  })/*
   .then(ok => {
     console.log('ready to listen for event ended');
     let flag;
-    if(COLLECTION == 'horse-racing') {
+    if(SPORT == 'horse-racing') {
       flag = 'HR';
     } else {
       flag = 'GENERIC';

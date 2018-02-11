@@ -137,7 +137,8 @@ const options = {
   reconnectInterval: 500,
   poolSize: 10,
   socketTimeoutMS: 0,
-  keepAlive: true
+  keepAlive: true,
+  autoIndex: false
 };
 
 process.on('SIGINT', () => {
@@ -183,17 +184,15 @@ connectToDB()
     // create 1 SELECTION per selection
     if(eventIdentifiers.sport != 'horse-racing') {
       eventIdentifiers.targets = selectionsList.filter(selection => selection.toLowerCase() != 'draw');
-      forkSelection(selectionsList[0], eventIdentifiers);
-      //selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
-      return Promise.resolve(true);
+      console.log('event-controller closing db connection...');
+      db.close();
+      return forkSelection(selectionsList[0], eventIdentifiers);
+      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
     } else {
-      forkSelection(selectionsList[0], eventIdentifiers);
-      //selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
-      return Promise.resolve(true);
+      console.log('event-controller closing db connection...');
+      db.close();
+      return forkSelection(selectionsList[0], eventIdentifiers);
+      //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
     }
-  })
-  .then(ok => {
-    console.log('event-controller closing db connection...');
-    return db.close();
   })
   .catch(err => console.error(err));

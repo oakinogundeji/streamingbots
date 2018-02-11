@@ -23,7 +23,7 @@ const SelectionDocSchema = mongoose.Schema({
   }
 });
 // create index on 'eventLabel'
-SelectionDocSchema.index({eventLabel: 1});
+SelectionDocSchema.index({eventLabel: 1, selection: 1});
 // compile to Model
 const SelectionDocModel = mongoose.model('SelectionDoc', SelectionDocSchema);
 // export model
