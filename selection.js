@@ -582,7 +582,7 @@ connectToDB()
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
-  })/*
+  })
   .then(ok => {
     console.log('ready to listen for event ended');
     let flag;
@@ -593,4 +593,4 @@ connectToDB()
     }
     return listenForCloseEvent(flag);
   })
-  .catch(err => console.error(err));*/
+  .catch(err => console.error(err));
