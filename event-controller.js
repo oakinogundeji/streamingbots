@@ -180,17 +180,7 @@ function connectToDB() {
   }
 }*/
 
-connectToDB()/*
-  .then(async (client) => {
-    console.log(`Successfully connected to ${DBURL}`);
-    console.log(`DB: ${DB}`);
-    const db = client.db(DB);
-    return db;
-  })
-  .then(db => {
-    DB_CONN = db;
-    return Promise.resolve(true);
-  })
+connectToDB()
   .then(ok => {
     console.log('getting selections...');
     return getSelections();
@@ -199,7 +189,7 @@ connectToDB()/*
     console.log('selectionsList...');
     console.log(selectionsList);
     return Promise.resolve(true);
-  })
+  })/*
   .then(ok => createEventCard())
   .then(eventIdentifiers => {
     console.log('all good...');
