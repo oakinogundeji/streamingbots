@@ -11,11 +11,8 @@ const
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
-  //COLLECTION = eventIdentifiers.collectionName,
   TARGETS = eventIdentifiers.targets,
-  //MongoClient = require('mongodb').MongoClient,
   DBURL = process.env.DBURL,
-  //DB = DBURL.split('/')[3],
   BETFAIR_URL = process.env.BETFAIR_URL,
   EVENT_END_URL = process.env.EVENT_END_URL,
   HR_EVENT_LINKS_SELECTOR = 'a.race-link',
@@ -28,7 +25,7 @@ const
   PWD_SELECTOR = '#login-form-password',
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
   SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button';
-return console.log(`SELECTION: ${SELECTION}, EVENT_LABEL: ${EVENT_LABEL}`);
+
 /*let arbTrigger = {
   betfair: {l0: null, liquidity: null},
   smarkets: {l0: null, liquidity: null}
@@ -73,7 +70,7 @@ const options = {
 
 process.on('SIGINT', () => {
   mongoose.connection.close(() => {
-    console.log('dBase connection closed due to app termination');
+    console.log('Selection dBase connection closed due to app termination');
     process.exit(0);
   });
 });
@@ -88,11 +85,11 @@ function connectToDB() {
        return reject('There was an error connecting to mongodb')
      });
      db.once('connected', () => {
-       console.info(`Successfully connected to ${DBURL}`);
+       console.info(`Selection successfully connected to ${DBURL}`);
        return resolve(true);
      });
      db.once('disconnected', () => {
-       console.info('Successfully disconnected from ' + DBURL);
+       console.info('Selection successfully disconnected from ' + DBURL);
      });
    });
  }
@@ -568,8 +565,7 @@ async function listenForGenericEventClose() {
 }
 
 // execute
-/*
-connectToDB()
+connectToDB()/*
   .then(async (client) => {
     console.log(`SELECTION for ${SELECTION} successfully connected to ${DBURL}`);
     console.log(`DB: ${DB}`);

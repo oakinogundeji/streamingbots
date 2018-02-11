@@ -142,7 +142,7 @@ const options = {
 
 process.on('SIGINT', () => {
   mongoose.connection.close(() => {
-    console.log('dBase connection closed due to app termination');
+    console.log('Event-Controller dBase connection closed due to app termination');
     process.exit(0);
   });
 });
@@ -157,11 +157,11 @@ function connectToDB() {
        return reject('There was an error connecting to mongodb')
      });
      db.once('connected', () => {
-       console.info(`Successfully connected to ${DBURL}`);
+       console.info(`Event-Controller successfully connected to ${DBURL}`);
        return resolve(true);
      });
      db.once('disconnected', () => {
-       console.info('Successfully disconnected from ' + DBURL);
+       console.info('Event-Controller successfully disconnected from ' + DBURL);
      });
    });
  }
