@@ -9,7 +9,7 @@ const
   crypto = require('crypto'),
   P = require('puppeteer'),
   Promise = require('bluebird'),
-  MongoClient = require('mongodb').MongoClient,
+  mongoose = require('mongoose'),
   moment = require('moment'),
   DBURL = process.env.DBURL,
   DB = DBURL.split('/')[3],
@@ -131,9 +131,43 @@ function forkSelection(SELECTION, eventIdentifiers) {
 }
 
 // connect to DBURL
-let DB_CONN;
+let db;
+const options = {
+  promiseLibrary: Promise,
+  reconnectTries: Number.MAX_VALUE,
+  reconnectInterval: 500,
+  poolSize: 10,
+  socketTimeoutMS: 0,
+  keepAlive: true
+};
 
-async function connectToDB () {
+process.on('SIGINT', () => {
+  mongoose.connection.close(() => {
+    console.log('dBase connection closed due to app termination');
+    process.exit(0);
+  });
+});
+
+function connectToDB() {
+   return new Promise((resolve, reject) => {
+     console.log(`Attempting to connect to ${DBURL}...`);
+     mongoose.connect(DBURL, options);
+     db = mongoose.connection;
+     db.on('error', err => {
+       console.error('There was a db connection error');
+       return reject('There was an error connecting to mongodb')
+     });
+     db.once('connected', () => {
+       console.info(`Successfully connected to ${DBURL}`);
+       return resolve(true);
+     });
+     db.once('disconnected', () => {
+       console.info('Successfully disconnected from ' + DBURL);
+     });
+   });
+ }
+
+/*async function connectToDB () {
   let client;
   try {
     client = await MongoClient.connect(DBURL);
@@ -144,9 +178,9 @@ async function connectToDB () {
   if(client) {
     return client;
   }
-}
+}*/
 
-connectToDB()
+connectToDB()/*
   .then(async (client) => {
     console.log(`Successfully connected to ${DBURL}`);
     console.log(`DB: ${DB}`);
@@ -179,5 +213,5 @@ connectToDB()
       return forkSelection(selectionsList[0], eventIdentifiers);
       //return selectionsList.forEach(selection => forkSelection(selection, eventIdentifiers));
     }
-  })
+  })*/
   .catch(err => console.error(err));

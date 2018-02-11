@@ -7,6 +7,7 @@ const
   {spawn} = require('child_process'),
   P = require('puppeteer'),
   Promise = require('bluebird'),
+  mongoose = require('mongoose'),
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
