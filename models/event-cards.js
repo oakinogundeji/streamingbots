@@ -9,6 +9,10 @@ const EventCardSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  eventDate: {
+    type: Date,
+    required: true
+  },
   sport: {
     type: String,
     required: true

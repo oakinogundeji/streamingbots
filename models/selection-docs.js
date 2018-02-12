@@ -9,6 +9,10 @@ const SelectionDocSchema = mongoose.Schema({
     type: String,
     required: true
   },
+  eventDate: {
+    type: Date,
+    required: true
+  },
   selection: {
     type: String,
     required: true
