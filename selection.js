@@ -13,6 +13,7 @@ const
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
   SPORT = eventIdentifiers.sport,
+  EVENT_DATE = eventIdentifiers.eventDate,
   TARGETS = eventIdentifiers.targets,
   DBURL = process.env.DBURL,
   BETFAIR_URL = process.env.BETFAIR_URL,
@@ -100,6 +101,7 @@ function connectToDB() {
 async function createSelectionDeltaDoc() {
   let selectionDoc = {
     eventLabel: EVENT_LABEL,
+    eventDate: EVENT_DATE,
     selection: SELECTION,
     b: [],
     s: []

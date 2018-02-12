@@ -82,20 +82,24 @@ async function createEventCard() {
   let
     sport,
     eventLabel,
+    eventDate,
+    EVENT_ARR,
     timeLabel = moment().format('L');
   timeLabel = timeLabel.split('/').reverse().join('-');
   let URL_ARR = SMARKETS_URL.split('/');
   sport = URL_ARR[6];
   if(sport == 'horse-racing' ) {
-    const EVENT_ARR = URL_ARR.slice(7);
+    EVENT_ARR = URL_ARR.slice(7);
     eventLabel = EVENT_ARR[0] +'|'+ EVENT_ARR[1] +'-'+ EVENT_ARR[2] +'-'+ EVENT_ARR[3] +' '+ EVENT_ARR[4];
   } else {
     const eventName = URL_ARR.pop();
     eventLabel = eventName +'|'+ timeLabel;
   }
+  eventDate = EVENT_ARR[1] +'-'+ EVENT_ARR[2] +'-'+ EVENT_ARR[3];
   // create initial EVENT Card
   let eventCard = {
     eventLabel,
+    eventDate,
     sport,
     selectionsList,
     country: 'GB',
@@ -108,13 +112,13 @@ async function createEventCard() {
   const alreadyExists = await query.exec();
   if(!!alreadyExists && (alreadyExists.eventLabel == eventCard.eventLabel)) {
     console.log(`${alreadyExists.eventLabel} already exists...`);
-    return Promise.resolve({eventLabel: alreadyExists.eventLabel, sport: sport});
+    return Promise.resolve({eventLabel: alreadyExists.eventLabel, sport: sport, eventDate: alreadyExists.eventDate});
   } else {
     const newEventCard = new EventCardModel(eventCard);
     const saveNewEventCard = await newEventCard.save();
     if(saveNewEventCard.eventLabel == eventCard.eventLabel) {
       console.log(`successfully created eventCard for ${saveNewEventCard.eventLabel}`);
-      return Promise.resolve({eventLabel: saveNewEventCard.eventLabel, sport: sport});
+      return Promise.resolve({eventLabel: saveNewEventCard.eventLabel, sport: sport, eventDate: saveNewEventCard.eventDate});
     } else {
       console.error(`failed to create eventCard for ${eventCard.eventLabel}`);
       const newErr = new Error(`failed to create eventCard for ${eventCard.eventLabel}`);
