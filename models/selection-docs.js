@@ -13,14 +13,58 @@ const SelectionDocSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  b: {
-    type : Array ,
-    default: []
-  },
-  s: {
-    type : Array ,
-    default: []
-  }
+  b: [{
+    betType: {
+      type: String,
+      required: true
+    },
+    matchedAmount: {
+      type: Number,
+      required: true
+    },
+    odds: {
+      type: Number,
+      required: true
+    },
+    liquidity: {
+      type: Number,
+      required: true
+    },
+    timestampFrom: {
+      type: Date,
+      required: true
+    },
+    timestampTo: {
+      type: Date,
+      default: null
+    }
+  }],
+  s: [{
+    betType: {
+      type: String,
+      required: true
+    },
+    matchedAmount: {
+      type: Number,
+      required: true
+    },
+    odds: {
+      type: Number,
+      required: true
+    },
+    liquidity: {
+      type: Number,
+      required: true
+    },
+    timestampFrom: {
+      type: Date,
+      required: true
+    },
+    timestampTo: {
+      type: Date,
+      default: null
+    }
+  }]
 });
 // create index on 'eventLabel'
 SelectionDocSchema.index({eventLabel: 1, selection: 1});
