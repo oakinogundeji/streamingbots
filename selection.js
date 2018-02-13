@@ -71,6 +71,7 @@ let
 
 let BETFAIR;
 let SMARKETS;
+let currentArb;
 
 
 // helper functions
@@ -392,9 +393,9 @@ function checkForArbs(exchange, data) {
         if(data.odds > arbTrigger.smarkets.l0.odds) {// candidate exists
           const arbsDoc = {
             selection: SELECTION,
-            timestamp: data.timestamp,
-            back: 'betfair',
-            lay: 'smarkets',
+            timestampFrom: data.timestamp,
+            back: 'smarkets',
+            lay: 'betfair',
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -416,7 +417,7 @@ function checkForArbs(exchange, data) {
         if(data.odds < arbTrigger.smarkets.b0.odds) {// candidate exists
           const arbsDoc = {
             selection: SELECTION,
-            timestamp: data.timestamp,
+            timestampFrom: data.timestamp,
             back: 'smarkets',
             lay: 'betfair',
             b: betfairDeltas,
@@ -442,7 +443,7 @@ function checkForArbs(exchange, data) {
         if(data.odds > arbTrigger.betfair.l0.odds) {// candidate exists
           const arbsDoc = {
             selection: SELECTION,
-            timestamp: data.timestamp,
+            timestampFrom: data.timestamp,
             back: 'smarkets',
             lay: 'betfair',
             b: betfairDeltas,
@@ -466,9 +467,9 @@ function checkForArbs(exchange, data) {
         if(data.odds < arbTrigger.betfair.b0.odds) {// candidate exists
           const arbsDoc = {
             selection: SELECTION,
-            timestamp: data.timestamp,
-            back: 'betfair',
-            lay: 'smarkets',
+            timestampFrom: data.timestamp,
+            back: 'smarkets',
+            lay: 'betfair',
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -485,19 +486,38 @@ function checkForArbs(exchange, data) {
 }
 
 async function saveArbs(data) {
-  // push data obj into 'betfair' array
-  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
-      arbs: data
-    }});
-  try{
-    const addedNewArbsDocData = await query.exec();
-    console.log('addedNewArbsDocData...');
-    console.log(addedNewArbsDocData);
-    return Promise.resolve(true);
-  } catch(err) {
-    console.error('failed to add new data to selectonArbsDoc...');
-    const newErr = new Error(`failed to add new data to selectonArbsDoc for ${SELECTION}`);
-    return Promise.reject(newErr);
+  if(!currentArb) {// check if first time arbs detected
+    return saveData(data);
+  } else {// set timestampTo of existing arbsDoc to timestampFrom of new arbs doc
+    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': data.timestampFrom}});
+    try {
+      const updatedOldArbsDocData = await query.exec();
+      console.log('updatedOldArbsDocData...');
+      console.log(updatedOldArbsDocData);
+    } catch(err) {
+      console.error('failed to update timestampTo field of existing arbsDoc...');
+      const newErr = new Error(`failed to update timestampTo field of existing arbsDoc for ${SELECTION}`);
+      return Promise.reject(newErr);
+    } finally {
+      return saveData(data);
+    }
+  }
+  async function saveData(data) {
+    // push data obj into 'arbs' array
+    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+        arbs: data
+      }});
+    try{
+      const addedNewArbsDocData = await query.exec();
+      console.log('addedNewArbsDocData...');
+      console.log(addedNewArbsDocData);
+      currentArb = addedNewArbsDocData;
+      return Promise.resolve(true);
+    } catch(err) {
+      console.error('failed to add new data to selectonArbsDoc...');
+      const newErr = new Error(`failed to add new data to selectonArbsDoc for ${SELECTION}`);
+      return Promise.reject(newErr);
+    }
   }
 }
 

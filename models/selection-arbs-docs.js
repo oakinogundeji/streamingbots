@@ -22,9 +22,13 @@ const SelectionArbsDocSchema = mongoose.Schema({
         type: String,
         required: true
       },
-      timestamp: {
-        type: String,
+      timestampFrom: {
+        type: Date,
         required: true
+      },
+      timestampTo: {
+        type: Date,
+        default: null
       },
       b: {
         b0: {
