@@ -401,10 +401,18 @@ function checkForArbs(exchange, data) {
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          return arbTrigger.betfair.b0 = {
-            odds: data.odds,
-            liquidity: data.liquidity
-          };
+          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+            arbTrigger.betfair.b0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            return endCurrentArbs(data.timestamp);
+          } else {// no currenArbs in play
+            return arbTrigger.betfair.b0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+          }
         }
       }
     } else if(data.betType == 'l0') {// check if l0
@@ -425,10 +433,18 @@ function checkForArbs(exchange, data) {
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          return arbTrigger.betfair.l0 = {
-            odds: data.odds,
-            liquidity: data.liquidity
-          };
+          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+            arbTrigger.betfair.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            return endCurrentArbs(data.timestamp);
+          } else {// no currenArbs in play
+            return arbTrigger.betfair.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+          }
         }
       }
     }
@@ -451,10 +467,18 @@ function checkForArbs(exchange, data) {
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          return arbTrigger.smarkets.b0 = {
-            odds: data.odds,
-            liquidity: data.liquidity
-          };
+          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+            arbTrigger.smarkets.b0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            return endCurrentArbs(data.timestamp);
+          } else {// no currenArbs in play
+            return arbTrigger.smarkets.b0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+          }
         }
       }
     } else if(data.betType == 'l0') {// check if l0
@@ -475,10 +499,18 @@ function checkForArbs(exchange, data) {
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          return arbTrigger.smarkets.l0 = {
-            odds: data.odds,
-            liquidity: data.liquidity
-          };
+          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+            arbTrigger.smarkets.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            return endCurrentArbs(data.timestamp);
+          } else {// no currenArbs in play
+            return arbTrigger.smarkets.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+          }
         }
       }
     }
@@ -519,6 +551,23 @@ async function saveArbs(data) {
       return Promise.reject(newErr);
     }
   }
+}
+
+function endCurrentArbs(timestamp) {
+  // update timestampTo of in-play currenArbs
+  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': timestamp}});
+  try {
+    const updatedOldArbsDocData = await query.exec();
+    console.log('updatedOldArbsDocData...');
+    console.log(updatedOldArbsDocData);
+  } catch(err) {
+    console.error('failed to update timestampTo field of existing arbsDoc...');
+    const newErr = new Error(`failed to update timestampTo field of existing arbsDoc for ${SELECTION}`);
+    return Promise.reject(newErr);
+  } finally {// no arbs in play
+    currentArbs = null;
+  }
+
 }
 
 async function listenForCloseEvent(flag) {
