@@ -150,23 +150,24 @@ async function createSelectionArbsDoc() {
     selection: SELECTION,
     arbs: []
   };
-
-  // confirm that selectionDoc does not yet exist on dBase
-  let foundDoc = await DB_CONN.SPORT(SPORT).findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
-  if(!foundDoc) {
-    let row = await DB_CONN.SPORT(SPORT).insertOne(selectionArbsDoc);
-
-    if(row.result.ok) {
-      console.log(`selectionArbsDoc created for ${SELECTION}...`);
-      console.log(selectionArbsDoc);
+  const query = SelectionArbsDocModel.findOne({eventLabel: EVENT_LABEL, selection: SELECTION});
+  const foundDoc = await query.exec();
+  if(!!foundDoc && (foundDoc.eventLabel == selectionArbsDoc.eventLabel) && (foundDoc.selection == selectionArbsDoc.selection)) {
+    console.log(`${foundDoc.selection} for ${foundDoc.eventLabel} arbs doc already exists...`);
+    console.log(foundDoc);
+    return Promise.resolve(true);
+  } else {
+    const newSelectionArbsDoc = new SelectionArbsDocModel(selectionArbsDoc);
+    const saveNewSelectionArbsDoc = await newSelectionArbsDoc.save();
+    if((saveNewSelectionArbsDoc.eventLabel == selectionArbsDoc.eventLabel) && (saveNewSelectionArbsDoc.selection == selectionArbsDoc.selection)) {
+      console.log(`successfully created selectionArbsDoc for ${saveNewSelectionArbsDoc.selection} on ${saveNewSelectionArbsDoc.eventLabel}`);
+      console.log(saveNewSelectionArbsDoc);
       return Promise.resolve(true);
     } else {
-      const newErr = new Error(`selectionArbsDoc NOT created for ${SELECTION}...`);
+      console.error(`failed to create selectionArbsDoc for ${saveNewSelectionArbsDoc.selection} on ${saveNewSelectionArbsDoc.eventLabel}`);
+      const newErr = new Error(`failed to create selectionArbsDoc for ${saveNewSelectionArbsDoc.selection} on ${saveNewSelectionArbsDoc.eventLabel}`);
       return Promise.reject(newErr);
     }
-  } else {
-    console.log(`selectionArbsDoc for ${SELECTION} already exists...`);
-    return Promise.resolve(true);
   }
 }
 
@@ -196,7 +197,7 @@ function spawnBetfairBot() {
       console.log(`data from betfair bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      //checkForArbs('betfair', dataObj);
+      checkForArbs('betfair', dataObj);
       return saveData('betfair', dataObj);
     } catch(err) {
       console.error(err);
@@ -249,7 +250,7 @@ function spawnSmarketsBot() {
       console.log(`data from smarkets bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      //checkForArbs('smarkets', dataObj);
+      checkForArbs('smarkets', dataObj);
       return saveData('smarkets', dataObj);
     } catch(err) {
       console.error(err);
@@ -362,7 +363,7 @@ async function saveSmarketsData(data) {
   }
 }
 
-/*function checkForArbs(exchange, data) {
+function checkForArbs(exchange, data) {
   if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
     console.log('checkForArbs invoked...');
     console.log(arbTrigger);
@@ -456,9 +457,9 @@ async function saveSmarketsData(data) {
       }
     }
   }
-}*/
+}
 
-/*async function saveArbs(data) {
+async function saveArbs(data) {
   // push data obj into 'arbs' array
   const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
       arbs: data
@@ -470,7 +471,7 @@ async function saveSmarketsData(data) {
     const newErr = new Error(`failed to add arbs for ${SELECTION}`);
     return Promise.reject(newErr);
   }
-}*/
+}
 
 async function listenForCloseEvent(flag) {
   if(flag == 'HR') {
@@ -597,7 +598,7 @@ async function listenForGenericEventClose() {
 // execute
 connectToDB()
   .then(ok => createSelectionDeltaDoc())
-  //.then(ok => createSelectionArbsDoc())
+  .then(ok => createSelectionArbsDoc())/*
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
@@ -611,5 +612,5 @@ connectToDB()
       flag = 'GENERIC';
     }
     return listenForCloseEvent(flag);
-  })
+  })*/
   .catch(err => console.error(err));
