@@ -16,14 +16,18 @@ const
   EMAIL = process.env.EMAIL,
   PWD = process.env.BETFAIR_PWD,
   EVENT_URL = process.env.BETFAIR_URL,
-  SELECTION = process.argv[2],
+  RAW_SELECTION = process.argv[2],
   EMAIL_SELECTOR = '#ssc-liu',
   PWD_SELECTOR = '#ssc-lipw',
   LOGIN_BTN_SELECTOR = '#ssc-lis',
   SELECTIONS_CONTAINER_SELECTOR = 'div.main-mv-runners-list-wrapper',
   MATCHED_AMOUNT_SELECTOR = '#main-wrapper > div > div.scrollable-panes-height-taker > div > div.page-content.nested-scrollable-pane-parent > div > div.bf-col-xxl-17-24.bf-col-xl-16-24.bf-col-lg-16-24.bf-col-md-15-24.bf-col-sm-14-24.bf-col-14-24.center-column.bfMarketSettingsSpace.bf-module-loading.nested-scrollable-pane-parent > div.scrollable-panes-height-taker.height-taker-helper > div > div.bf-row.main-mv-container > div > bf-main-market > bf-main-marketview > div > div.mv-sticky-header > bf-marketview-header-wrapper > div > div > mv-header > div > div > div.mv-secondary-section > div > div > span.total-matched';
 
+let SELECTION;
+const regx = /['"]/;
 
+SELECTION = RAW_SELECTION.toLowerCase();
+SELECTION = SELECTION.replace(regx, '');
 // define scraper function
 
 async function bot() {
@@ -74,7 +78,11 @@ async function bot() {
             odds,
             liquidity;
           // check if delta is for runner
-          if(e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0] == SELECTION) {
+          const regx = /['"]/;
+          let TARGET_SELECTION = e.target.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].children[0].children[0].children[2].innerText.split('\n')[0];
+          TARGET_SELECTION = TARGET_SELECTION.toLowerCase();
+          TARGET_SELECTION = TARGET_SELECTION.replace(regx, '');
+          if(TARGET_SELECTION == SELECTION) {
           // check if back or lay
           if(e.target.parentElement.parentElement.classList[0] == 'back') { // BACK
             if(e.target.parentElement.parentElement.className == 'back mv-bet-button back-button back-selection-button') {
