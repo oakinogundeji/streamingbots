@@ -86,6 +86,10 @@ const SelectionArbsDocSchema = mongoose.Schema({
             type: Number,
             required: true
           }
+        },
+        matchedAmount: {
+          type: Number,
+          required: true
         }
       },
       s: {
@@ -148,6 +152,10 @@ const SelectionArbsDocSchema = mongoose.Schema({
             type: Number,
             required: true
           }
+        },
+        matchedAmount: {
+          type: Number,
+          required: true
         }
       },
       back: {

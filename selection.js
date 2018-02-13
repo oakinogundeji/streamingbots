@@ -298,177 +298,205 @@ async function saveData(exchange, data) {
 }
 
 async function saveBetfairData(data) {
-  /*
-  // check if oddsType from bot has already changed
-  if(!betfairDeltas[data.betType]) {// if not update and save in memory
-    betfairDeltas[data.betType] = data;
-  } else if(!betfairDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
-    data.timestampTo = data.timestampFrom;
-    data.timestampFrom = betfairDeltas[data.betType].timestampFrom;
-    // delete existing in memory object
-    betfairDeltas[data.betType] = null;
-  }*/
-  // check if matched amount has changed
-  if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
-  delete data.matchedAmount;
-  } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
-  betfairDeltas.matchedAmount = data.matchedAmount;
+  if(!betfairDeltas[data.betType]) {// check if first time cell seen
+    betfairDeltas[data.betType] = {
+      odds: data.odds,
+      liquidity: data.liquidity
+    };
+    betfairDeltas.matchedAmount = data.matchedAmount;
+    return saveData(data);
+  } else {// cell already exists
+    // check if matched amount has changed
+    if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
+    delete data.matchedAmount;
+    } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
+    betfairDeltas.matchedAmount = data.matchedAmount;
+    }
+    // save new info for betfairDeltas
+    betfairDeltas[data.betType] = {
+      odds: data.odds,
+      liquidity: data.liquidity
+    };
+    return saveData(data);
   }
-  // push data obj into 'betfair' array
-  const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
-      b: data
-    }});
-  try{
-    const addedNewBetfairData = await query.exec();
-    console.log('addedNewBetfairData...');
-    console.log(addedNewBetfairData);
-    return Promise.resolve(true);
-  } catch(err) {
-    console.error('failed to update new betfair data...');
-    const newErr = new Error(`failed to update new betfair data... for ${SELECTION}`);
-    return Promise.reject(newErr);
+
+  async function saveData(data) {
+    // push data obj into 'betfair' array
+    const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+        b: data
+      }});
+    try{
+      const addedNewBetfairData = await query.exec();
+      console.log('addedNewBetfairData...');
+      console.log(addedNewBetfairData);
+      return Promise.resolve(true);
+    } catch(err) {
+      console.error('failed to update new betfair data...');
+      const newErr = new Error(`failed to update new betfair data... for ${SELECTION}`);
+      return Promise.reject(newErr);
+    }
   }
 }
 
 async function saveSmarketsData(data) {
-  /*
-  // check if oddsType from bot has already changed
-  if(!smarketsDeltas[data.betType]) {// if not update and save in memory
-    smarketsDeltas[data.betType] = data;
-  } else if(!smarketsDeltas[data.betType].timestampTo) {// oddsType already in memory, it has just changed
-    data.timestampTo = data.timestampFrom;
-    data.timestampFrom = smarketsDeltas[data.betType].timestampFrom;
-    // delete existing in memory object
-    smarketsDeltas[data.betType] = null;
-  }*/
-  // check if matched amount has changed
-  if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
-  delete data.matchedAmount;
-  } else {// has changed, update betfairDeltas.matchedAmount and save new matchedAmount
-  smarketsDeltas.matchedAmount = data.matchedAmount;
+  if(!smarketsDeltas[data.betType]) {// check if first time cell seen
+    smarketsDeltas[data.betType] = {
+      odds: data.odds,
+      liquidity: data.liquidity
+    };
+    smarketsDeltas.matchedAmount = data.matchedAmount;
+    return saveData(data);
+  } else {// cell already exists
+    // check if matched amount has changed
+    if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
+    delete data.matchedAmount;
+    } else {// has changed, update smarketsDeltas.matchedAmount and save new matchedAmount
+    smarketsDeltas.matchedAmount = data.matchedAmount;
+    }
+    // save new info for smarketsDeltas
+    smarketsDeltas[data.betType] = {
+      odds: data.odds,
+      liquidity: data.liquidity
+    };
+    return saveData(data);
   }
-  // push data obj into 'smarkets' array
-  const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
-      s: data
-    }});
-  try{
-    const addedNewSmarketsData = await query.exec();
-    console.log('addedNewSmarketsData...');
-    console.log(addedNewSmarketsData);
-    return Promise.resolve(true);
-  } catch(err) {
-    console.error('failed to update new smarkets data...');
-    const newErr = new Error(`failed to update new smarkets data... for ${SELECTION}`);
-    return Promise.reject(newErr);
+
+  async function saveData(data) {
+    // push data obj into 'smarkets' array
+    const query = SelectionDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
+        s: data
+      }});
+    try{
+      const addedNewSmarketsData = await query.exec();
+      console.log('addedNewSmarketsData...');
+      console.log(addedNewSmarketsData);
+      return Promise.resolve(true);
+    } catch(err) {
+      console.error('failed to update new smarkets data...');
+      const newErr = new Error(`failed to update new smarkets data... for ${SELECTION}`);
+      return Promise.reject(newErr);
+    }
   }
 }
 
 function checkForArbs(exchange, data) {
+  console.log(`checkForArbs invoked for ${exchange}`);
   if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
-    console.log('checkForArbs invoked...');
-    console.log(arbTrigger);
-    const odds = Number(data.odds);
-    // process data
-    // check if betType == 'l0'
-    if(data.betType == 'l0') {
-      arbTrigger.betfair.l0 = odds;
-      return arbTrigger.betfair.liquidity = data.liquidity;
-    } else {// check if arbTrigger vals have been initialized
-      if(!arbTrigger.smarkets.l0) {
-        return;
-      }
-      // check if arbs exists
-      if(odds > arbTrigger.smarkets.l0) {// arbs exists
-        console.log(`Arb exists for ${SELECTION}`);
-        let
-          betfairLiquidity = Number(data.liquidity.slice(1)),
-          smarketsLiquidity = Number(arbTrigger.smarkets.liquidity.slice(1)),
-          arbsLiquidity;
-        if((betfairLiquidity > smarketsLiquidity ) && (smarketsLiquidity > 2)) {
-          arbsLiquidity = arbTrigger.smarkets.liquidity;
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        } else if((smarketsLiquidity > betfairLiquidity ) && (betfairLiquidity > 2)) {
-          arbsLiquidity = data.liquidity;
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        } else {
-          arbsLiquidity = '£2';
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        }
-        const arbsData = {
-          b0: odds,
-          l0: arbTrigger.smarkets.l0,
-          back: 'betfair',
-          lay: 'smarkets',
-          selection: SELECTION,
-          liquidity: arbsLiquidity,
-          timestamp: data.timestamp
+    if(data.betType == 'b0') {// check if b0
+      if(!arbTrigger.smarkets.l0.odds) {// check if oppossing cell not initialized
+        return arbTrigger.betfair.b0 = {
+          odds: data.odds,
+          liquidity: data.liquidity
         };
-        console.log(arbsData);
-        console.log('checkForArbs exit...');
-        return saveArbs(arbsData);
+      } else {// check if arbs candidate exists
+        if(data.odds > arbTrigger.smarkets.l0.odds) {// candidate exists
+          const arbsDoc = {
+            selection: SELECTION,
+            timestamp: data.timestamp,
+            back: 'betfair',
+            lay: 'smarkets',
+            b: betfairDeltas,
+            s: smarketsDeltas
+          };
+          return saveArbs(arbsDoc);
+        } else {// candidate does NOT exist
+          return arbTrigger.betfair.b0 = {
+            odds: data.odds,
+            liquidity: data.liquidity
+          };
+        }
+      }
+    } else if(data.betType == 'l0') {// check if l0
+      if(!arbTrigger.smarkets.b0.odds) {// check if oppossing cell not initialized
+        return arbTrigger.betfair.l0 = {
+          odds: data.odds,
+          liquidity: data.liquidity
+        };
+      } else {// check if arbs candidate exists
+        if(data.odds < arbTrigger.smarkets.b0.odds) {// candidate exists
+          const arbsDoc = {
+            selection: SELECTION,
+            timestamp: data.timestamp,
+            back: 'smarkets',
+            lay: 'betfair',
+            b: betfairDeltas,
+            s: smarketsDeltas
+          };
+          return saveArbs(arbsDoc);
+        } else {// candidate does NOT exist
+          return arbTrigger.betfair.l0 = {
+            odds: data.odds,
+            liquidity: data.liquidity
+          };
+        }
       }
     }
   } else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
-    console.log('checkForArbs invoked...');
-    const odds = Number(data.odds);
-    // process data
-    // check if betType == 'l0'
-    if(data.betType == 'l0') {
-      arbTrigger.smarkets.l0 = odds;
-      return arbTrigger.smarkets.liquidity = data.liquidity;
-    } else {// check if arbTrigger vals have been initialized
-      if(!arbTrigger.betfair.l0) {
-        return;
-      }
-      // check if arbs exists
-      if(odds > arbTrigger.betfair.l0) {// arbs exists
-        console.log(`Arb exists for ${SELECTION}`);
-        let
-          smarketsLiquidity = Number(data.liquidity.slice(1)),
-          betfairLiquidity = Number(arbTrigger.betfair.liquidity.slice(1)),
-          arbsLiquidity;
-        if((smarketsLiquidity > betfairLiquidity ) && (betfairLiquidity > 2)) {
-          arbsLiquidity = arbTrigger.betfair.liquidity;
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        } else if((betfairLiquidity > smarketsLiquidity ) && (smarketsLiquidity > 2)) {
-          arbsLiquidity = data.liquidity;
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        } else {
-          arbsLiquidity = '£2';
-          console.log(`smarketsLiquidity: ${smarketsLiquidity}, betfairLiquidity: ${betfairLiquidity}, arbsLiquidity: ${arbsLiquidity}`);
-          console.log(arbTrigger);
-        }
-        const arbsData = {
-          b0: odds,
-          l0: arbTrigger.betfair.l0,
-          back: 'smarkets',
-          lay: 'betfair',
-          selection: SELECTION,
-          liquidity: arbsLiquidity,
-          timestamp: data.timestamp
+    if(data.betType == 'b0') {// check if b0
+      if(!arbTrigger.betfair.l0.odds) {// check if oppossing cell not initialized
+        return arbTrigger.smarkets.b0 = {
+          odds: data.odds,
+          liquidity: data.liquidity
         };
-        console.log(arbsData);
-        return saveArbs(arbsData);
+      } else {// check if arbs candidate exists
+        if(data.odds > arbTrigger.betfair.l0.odds) {// candidate exists
+          const arbsDoc = {
+            selection: SELECTION,
+            timestamp: data.timestamp,
+            back: 'smarkets',
+            lay: 'betfair',
+            b: betfairDeltas,
+            s: smarketsDeltas
+          };
+          return saveArbs(arbsDoc);
+        } else {// candidate does NOT exist
+          return arbTrigger.smarkets.b0 = {
+            odds: data.odds,
+            liquidity: data.liquidity
+          };
+        }
+      }
+    } else if(data.betType == 'l0') {// check if l0
+      if(!arbTrigger.betfair.b0.odds) {// check if oppossing cell not initialized
+        return arbTrigger.smarkets.l0 = {
+          odds: data.odds,
+          liquidity: data.liquidity
+        };
+      } else {// check if arbs candidate exists
+        if(data.odds < arbTrigger.betfair.b0.odds) {// candidate exists
+          const arbsDoc = {
+            selection: SELECTION,
+            timestamp: data.timestamp,
+            back: 'betfair',
+            lay: 'smarkets',
+            b: betfairDeltas,
+            s: smarketsDeltas
+          };
+          return saveArbs(arbsDoc);
+        } else {// candidate does NOT exist
+          return arbTrigger.smarkets.l0 = {
+            odds: data.odds,
+            liquidity: data.liquidity
+          };
+        }
       }
     }
   }
 }
 
 async function saveArbs(data) {
-  // push data obj into 'arbs' array
-  const addNewData = await DB_CONN.SPORT(SPORT).findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, flag: 'arbs'}, {$push: {
+  // push data obj into 'betfair' array
+  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION}, {$push: {
       arbs: data
     }});
-  if(addNewData.lastErrorObject.updatedExisting) {
-    console.log('addNewData arbs...');
+  try{
+    const addedNewArbsDocData = await query.exec();
+    console.log('addedNewArbsDocData...');
+    console.log(addedNewArbsDocData);
     return Promise.resolve(true);
-  } else {
-    const newErr = new Error(`failed to add arbs for ${SELECTION}`);
+  } catch(err) {
+    console.error('failed to add new data to selectonArbsDoc...');
+    const newErr = new Error(`failed to add new data to selectonArbsDoc for ${SELECTION}`);
     return Promise.reject(newErr);
   }
 }
@@ -598,7 +626,7 @@ async function listenForGenericEventClose() {
 // execute
 connectToDB()
   .then(ok => createSelectionDeltaDoc())
-  .then(ok => createSelectionArbsDoc())/*
+  .then(ok => createSelectionArbsDoc())
   .then(ok => {
     console.log(`spawning streaming BOTs for ${SELECTION}...`);
     return spawnBots();
@@ -612,5 +640,5 @@ connectToDB()
       flag = 'GENERIC';
     }
     return listenForCloseEvent(flag);
-  })*/
+  })
   .catch(err => console.error(err));
