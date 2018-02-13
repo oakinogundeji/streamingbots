@@ -553,7 +553,7 @@ async function saveArbs(data) {
   }
 }
 
-function endCurrentArbs(timestamp) {
+async function endCurrentArbs(timestamp) {
   // update timestampTo of in-play currenArbs
   const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': timestamp}});
   try {
