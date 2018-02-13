@@ -153,8 +153,7 @@ async function bot() {
               matchedAmount,
               odds: Number(odds),
               liquidity: Number(liquidity.slice(1)),
-              timestampFrom: timestamp,
-              timestampTo: null
+              timestamp
             };
             const output = JSON.stringify(data);
             console.log(output);

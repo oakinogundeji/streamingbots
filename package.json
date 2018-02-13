@@ -22,8 +22,6 @@
     "moment": "^2.20.1",
     "mongodb": "^3.0.1",
     "mongoose": "^5.0.4",
-    "mongoose-write-stream": "0.0.0",
-    "puppeteer": "^1.0.0",
-    "string-hash": "^1.1.3"
+    "puppeteer": "^1.0.0"
   }
 }

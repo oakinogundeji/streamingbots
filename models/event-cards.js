@@ -1,7 +1,6 @@
 'use strict';
 //=============================================================================
 const mongoose = require('mongoose');
-mongoose.plugin(require('mongoose-write-stream'));
 //=============================================================================
 // Schema
 const EventCardSchema = mongoose.Schema({

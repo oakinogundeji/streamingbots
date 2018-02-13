@@ -1,7 +1,6 @@
 'use strict';
 //=============================================================================
 const mongoose = require('mongoose');
-mongoose.plugin(require('mongoose-write-stream'));
 //=============================================================================
 // Schema
 const SelectionDocSchema = mongoose.Schema({
@@ -34,13 +33,9 @@ const SelectionDocSchema = mongoose.Schema({
       type: Number,
       required: true
     },
-    timestampFrom: {
+    timestamp: {
       type: Date,
       required: true
-    },
-    timestampTo: {
-      type: Date,
-      default: null
     }
   }],
   s: [{
@@ -60,13 +55,9 @@ const SelectionDocSchema = mongoose.Schema({
       type: Number,
       required: true
     },
-    timestampFrom: {
+    timestamp: {
       type: Date,
       required: true
-    },
-    timestampTo: {
-      type: Date,
-      default: null
     }
   }]
 });

@@ -9,6 +9,7 @@ const
   Promise = require('bluebird'),
   mongoose = require('mongoose'),
   SelectionDocModel = require('./models/selection-docs'),
+  SelectionArbsDocModel = require('./models/selection-arbs-docs'),
   SELECTION = process.argv[2],
   eventIdentifiers = JSON.parse(process.argv[3]),
   EVENT_LABEL = eventIdentifiers.eventLabel,
@@ -29,10 +30,24 @@ const
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
   SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button';
 
-/*let arbTrigger = {
-  betfair: {l0: null, liquidity: null},
-  smarkets: {l0: null, liquidity: null}
-};*/
+let arbTrigger = {
+  betfair: {
+    l0: {
+      odds: null, liquidity: null
+    },
+    b0: {
+      odds: null, liquidity: null
+    },
+  },
+  smarkets: {
+    l0: {
+      odds: null, liquidity: null
+    },
+    b0: {
+      odds: null, liquidity: null
+    },
+  }
+};
 
 let
   betfairDeltas = {
@@ -59,7 +74,6 @@ let SMARKETS;
 
 
 // helper functions
-// connect to DBURL
 // connect to DBURL
 let db;
 const options = {
@@ -129,9 +143,10 @@ async function createSelectionDeltaDoc() {
   }
 }
 
-/*async function createSelectionArbsDoc() {
+async function createSelectionArbsDoc() {
   let selectionArbsDoc = {
     eventLabel: EVENT_LABEL,
+    eventDate: EVENT_DATE,
     selection: SELECTION,
     arbs: []
   };
@@ -153,7 +168,7 @@ async function createSelectionDeltaDoc() {
     console.log(`selectionArbsDoc for ${SELECTION} already exists...`);
     return Promise.resolve(true);
   }
-}*/
+}
 
 function spawnBots() {
   // spawn the BOTS
@@ -282,6 +297,7 @@ async function saveData(exchange, data) {
 }
 
 async function saveBetfairData(data) {
+  /*
   // check if oddsType from bot has already changed
   if(!betfairDeltas[data.betType]) {// if not update and save in memory
     betfairDeltas[data.betType] = data;
@@ -290,7 +306,7 @@ async function saveBetfairData(data) {
     data.timestampFrom = betfairDeltas[data.betType].timestampFrom;
     // delete existing in memory object
     betfairDeltas[data.betType] = null;
-  }
+  }*/
   // check if matched amount has changed
   if(betfairDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
@@ -314,6 +330,7 @@ async function saveBetfairData(data) {
 }
 
 async function saveSmarketsData(data) {
+  /*
   // check if oddsType from bot has already changed
   if(!smarketsDeltas[data.betType]) {// if not update and save in memory
     smarketsDeltas[data.betType] = data;
@@ -322,7 +339,7 @@ async function saveSmarketsData(data) {
     data.timestampFrom = smarketsDeltas[data.betType].timestampFrom;
     // delete existing in memory object
     smarketsDeltas[data.betType] = null;
-  }
+  }*/
   // check if matched amount has changed
   if(smarketsDeltas.matchedAmount == data.matchedAmount) {// has NOT changed don't save new matchedAmount
   delete data.matchedAmount;
