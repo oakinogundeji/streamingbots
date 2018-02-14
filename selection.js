@@ -395,24 +395,24 @@ function checkForArbs(exchange, data) {
           if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
             targetLiquidity = arbTrigger.smarkets.l0.liquidity;
           } else {
-            targetLiquidity = data.liquidity
+            targetLiquidity = data.liquidity;
           }
           const WINAMT = targetLiquidity * (data.odds - arbTrigger.smarkets.l0.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds}, Lay on Smarkets for £2 at ${arbTrigger.smarkets.l0.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
             arbTrigger.betfair.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
-            return endCurrentArbs(data.timestamp);
+            return endcurrentArb(data.timestamp);
           } else {// no currenArbs in play
             return arbTrigger.betfair.b0 = {
               odds: data.odds,
@@ -433,24 +433,24 @@ function checkForArbs(exchange, data) {
           if(data.liquidity > arbTrigger.smarkets.b0.liquidity) {
             targetLiquidity = arbTrigger.smarkets.b0.liquidity;
           } else {
-            targetLiquidity = data.liquidity
+            targetLiquidity = data.liquidity;
           }
           const WINAMT = targetLiquidity * (arbTrigger.smarkets.b0.odds - data.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${arbTrigger.smarkets.b0.odds} Lay on Betfair for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${arbTrigger.smarkets.b0.odds}, Lay on Betfair for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
             arbTrigger.betfair.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
-            return endCurrentArbs(data.timestamp);
+            return endcurrentArb(data.timestamp);
           } else {// no currenArbs in play
             return arbTrigger.betfair.l0 = {
               odds: data.odds,
@@ -473,24 +473,24 @@ function checkForArbs(exchange, data) {
           if(data.liquidity > arbTrigger.betfair.l0.liquidity) {
             targetLiquidity = arbTrigger.betfair.l0.liquidity;
           } else {
-            targetLiquidity = data.liquidity
+            targetLiquidity = data.liquidity;
           }
           const WINAMT = targetLiquidity * (data.odds - arbTrigger.betfair.l0.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.betfair.l0.odds}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds}, Lay on Betfair for £2 at ${arbTrigger.betfair.l0.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
             arbTrigger.smarkets.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
-            return endCurrentArbs(data.timestamp);
+            return endcurrentArb(data.timestamp);
           } else {// no currenArbs in play
             return arbTrigger.smarkets.b0 = {
               odds: data.odds,
@@ -511,24 +511,24 @@ function checkForArbs(exchange, data) {
           if(data.liquidity > arbTrigger.betfair.b0.liquidity) {
             targetLiquidity = arbTrigger.betfair.b0.liquidity;
           } else {
-            targetLiquidity = data.liquidity
+            targetLiquidity = data.liquidity;
           }
           const WINAMT = targetLiquidity * (arbTrigger.betfair.b0.odds - data.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${arbTrigger.betfair.b0.odds} Lay on Smarkets for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${arbTrigger.betfair.b0.odds}, Lay on Smarkets for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
           return saveArbs(arbsDoc);
         } else {// candidate does NOT exist
-          if(!!currentArbs && !currentArbs.timestampTo) {// check if any arbs in play
+          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
             arbTrigger.smarkets.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
-            return endCurrentArbs(data.timestamp);
+            return endcurrentArb(data.timestamp);
           } else {// no currenArbs in play
             return arbTrigger.smarkets.l0 = {
               odds: data.odds,
@@ -577,7 +577,7 @@ async function saveArbs(data) {
   }
 }
 
-async function endCurrentArbs(timestamp) {
+async function endcurrentArb(timestamp) {
   // update timestampTo of in-play currenArbs
   const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': timestamp}});
   try {
@@ -589,7 +589,7 @@ async function endCurrentArbs(timestamp) {
     const newErr = new Error(`failed to update timestampTo field of existing arbsDoc for ${SELECTION}`);
     return Promise.reject(newErr);
   } finally {// no arbs in play
-    currentArbs = null;
+    currentArb = null;
   }
 
 }
