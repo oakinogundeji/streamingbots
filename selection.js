@@ -391,11 +391,16 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds > arbTrigger.smarkets.l0.odds) {// candidate exists
+          let winAmnt;
+          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
+            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          } else {
+            winAmnt = data.liquidity
+          }
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            back: 'smarkets',
-            lay: 'betfair',
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -423,11 +428,16 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds < arbTrigger.smarkets.b0.odds) {// candidate exists
+          let winAmnt;
+          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
+            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          } else {
+            winAmnt = data.liquidity
+          }
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            back: 'smarkets',
-            lay: 'betfair',
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -457,11 +467,16 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds > arbTrigger.betfair.l0.odds) {// candidate exists
+          let winAmnt;
+          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
+            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          } else {
+            winAmnt = data.liquidity
+          }
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            back: 'smarkets',
-            lay: 'betfair',
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -489,11 +504,16 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds < arbTrigger.betfair.b0.odds) {// candidate exists
+          let winAmnt;
+          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
+            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          } else {
+            winAmnt = data.liquidity
+          }
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            back: 'smarkets',
-            lay: 'betfair',
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
