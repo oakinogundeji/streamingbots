@@ -162,11 +162,7 @@ const SelectionArbsDocSchema = mongoose.Schema({
           required: true
         }
       },
-      back: {
-        type: String,
-        required: true
-      },
-      lay: {
+      summary: {
         type: String,
         required: true
       }
