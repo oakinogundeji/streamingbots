@@ -198,7 +198,9 @@ function spawnBetfairBot() {
       console.log(`data from betfair bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      checkForArbs('betfair', dataObj);
+      if((dataObj.betType == 'b0') || (dataObj.betType == 'l0')) {
+        checkForArbs('betfair', dataObj);
+      }
       return saveData('betfair', dataObj);
     } catch(err) {
       console.error(err);
@@ -251,7 +253,9 @@ function spawnSmarketsBot() {
       console.log(`data from smarkets bot for ${SELECTION}`);
       const dataObj = JSON.parse(data.toString());
       console.log(dataObj);
-      checkForArbs('smarkets', dataObj);
+      if((dataObj.betType == 'b0') || (dataObj.betType == 'l0')) {
+        checkForArbs('smarkets', dataObj);
+      }      
       return saveData('smarkets', dataObj);
     } catch(err) {
       console.error(err);
