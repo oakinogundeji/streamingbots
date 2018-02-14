@@ -391,16 +391,17 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds > arbTrigger.smarkets.l0.odds) {// candidate exists
-          let winAmnt;
+          let targetLiquidity;
           if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
-            winAmnt = arbTrigger.smarkets.l0.liquidity;
+            targetLiquidity = arbTrigger.smarkets.l0.liquidity;
           } else {
-            winAmnt = data.liquidity
+            targetLiquidity = data.liquidity
           }
+          const WINAMT = targetLiquidity * (data.odds - arbTrigger.smarkets.l0.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -428,16 +429,17 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds < arbTrigger.smarkets.b0.odds) {// candidate exists
-          let winAmnt;
-          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
-            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          let targetLiquidity;
+          if(data.liquidity > arbTrigger.smarkets.b0.liquidity) {
+            targetLiquidity = arbTrigger.smarkets.b0.liquidity;
           } else {
-            winAmnt = data.liquidity
+            targetLiquidity = data.liquidity
           }
+          const WINAMT = targetLiquidity * (arbTrigger.smarkets.b0.odds - data.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${arbTrigger.smarkets.b0.odds} Lay on Betfair for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -467,16 +469,17 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds > arbTrigger.betfair.l0.odds) {// candidate exists
-          let winAmnt;
-          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
-            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          let targetLiquidity;
+          if(data.liquidity > arbTrigger.betfair.l0.liquidity) {
+            targetLiquidity = arbTrigger.betfair.l0.liquidity;
           } else {
-            winAmnt = data.liquidity
+            targetLiquidity = data.liquidity
           }
+          const WINAMT = targetLiquidity * (data.odds - arbTrigger.betfair.l0.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds} Lay on Betfair for £2 at${arbTrigger.betfair.l0.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
@@ -504,16 +507,17 @@ function checkForArbs(exchange, data) {
         };
       } else {// check if arbs candidate exists
         if(data.odds < arbTrigger.betfair.b0.odds) {// candidate exists
-          let winAmnt;
-          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
-            winAmnt = arbTrigger.smarkets.l0.liquidity;
+          let targetLiquidity;
+          if(data.liquidity > arbTrigger.betfair.b0.liquidity) {
+            targetLiquidity = arbTrigger.betfair.b0.liquidity;
           } else {
-            winAmnt = data.liquidity
+            targetLiquidity = data.liquidity
           }
+          const WINAMT = targetLiquidity * (arbTrigger.betfair.b0.odds - data.odds);
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds} Lay on Smarkets for £2 at${arbTrigger.smarkets.l0.odds}. Win Amount: ${winAmnt}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${arbTrigger.betfair.b0.odds} Lay on Smarkets for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
             b: betfairDeltas,
             s: smarketsDeltas
           };
