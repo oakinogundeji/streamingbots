@@ -384,15 +384,17 @@ async function saveSmarketsData(data) {
   }
 }
 
-function checkForArbs(exchange, data) {
+async function checkForArbs(exchange, data) {
   console.log(`checkForArbs invoked for ${exchange}`);
   if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
     if(data.betType == 'b0') {// check if b0
       if(!arbTrigger.smarkets.l0.odds) {// check if smarkets l0 odds not initialized
-        return arbTrigger.betfair.b0 = {
+        arbTrigger.betfair.b0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
+        console.log('betfair b0 seen - no smarkets l0');
+        return console.log(arbTrigger);
       }
       else {// check if arbs candidate exists
         const
@@ -401,6 +403,7 @@ function checkForArbs(exchange, data) {
           L0O = arbTrigger.smarkets.l0.odds,
           L0L = arbTrigger.smarkets.l0.liquidity;
         if(B0O > L0O) {// candidate exists
+          console.log('candidate arb seen triggered by betfair b0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
             B = Object.assign({}, betfairDeltas),
@@ -416,6 +419,10 @@ function checkForArbs(exchange, data) {
             odds: L0O,
             liquidity: L0L
           };
+          console.log('B:..');
+          console.log(B);
+          console.log('S:..');
+          console.log(S);
           // derive target liquidity and win amount
           let targetLiquidity;
           if(B0L > L0L) {
@@ -429,7 +436,7 @@ function checkForArbs(exchange, data) {
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: £${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £${targetLiquidity} at ${B0O}, Lay on Smarkets for £${targetLiquidity} at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -438,35 +445,47 @@ function checkForArbs(exchange, data) {
             odds: B0O,
             liquidity: B0L
           };
+          console.log('betfair b0.. arbTrigger');
+          console.log(arbTrigger);
+          console.log('arbsDoc...');
+          console.log(arbsDoc);
           // save the arbDoc
           return saveArbs(arbsDoc);
         }
         else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
-            // update in memory arbTrigger with new betfair.b0 values
+            console.log('terminating inplay currentArb due to betfair b0...');
+            console.log(currentArb);
+            // update in memory arbTrigger with new smarkets.l0 values
             arbTrigger.betfair.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs but inplay currentArb via betfair b0...');
+            console.log(arbTrigger);
             // end in-play arbs
             return endcurrentArb(data.timestamp);
           }
           else {// no currenArbs in play
             // update in memory arbTrigger with new betfair.b0 values
-            return arbTrigger.betfair.b0 = {
+            arbTrigger.betfair.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs n no inplay currentArb via betfair b0...');
+            return console.log(arbTrigger);
           }
         }
       }
     }
     else if(data.betType == 'l0') {// check if l0
       if(!arbTrigger.smarkets.b0.odds) {// check if smarkets b0 not initialized
-        return arbTrigger.betfair.l0 = {
+        arbTrigger.betfair.l0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
+        console.log('betfair l0 seen - no smarkets b0');
+        return console.log(arbTrigger);
       }
       else {// check if arbs candidate exists
         const
@@ -475,6 +494,7 @@ function checkForArbs(exchange, data) {
           B0O = arbTrigger.smarkets.b0.odds,
           B0L = arbTrigger.smarkets.b0.liquidity;
         if(L0O < B0O) {// candidate exists
+          console.log('candidate arb seen triggered by betfair l0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
             B = Object.assign({}, betfairDeltas),
@@ -490,82 +510,10 @@ function checkForArbs(exchange, data) {
             odds: B0O,
             liquidity: B0L
           };
-          // derive target liquidity and win amount
-          let targetLiquidity;
-          if(BOL > L0L) {
-            targetLiquidity = L0L;
-          }
-          else {
-            targetLiquidity = B0L;
-          }
-          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
-          // create arbsDoc object
-          const arbsDoc = {
-            selection: SELECTION,
-            timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: £${WINAMT}`,
-            b: B,
-            s: S
-          };
-          // update in memory arbTrigger with new betfair.l0 values
-          arbTrigger.betfair.l0 = {
-            odds: L0O,
-            liquidity: L0L
-          };
-          // save the arbDoc
-          return saveArbs(arbsDoc);
-        }
-        else {// candidate does NOT exist
-          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
-            // update in memory arbTrigger with new betfair.l0 values
-            arbTrigger.betfair.l0 = {
-              odds: data.odds,
-              liquidity: data.liquidity
-            };
-            // end in-play arbs
-            return endcurrentArb(data.timestamp);
-          }
-          else {// no currenArbs in play
-            // update in memory arbTrigger with new betfair.l0 values
-            return arbTrigger.betfair.l0 = {
-              odds: data.odds,
-              liquidity: data.liquidity
-            };
-          }
-        }
-      }
-    }
-  }
-  else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
-    if(data.betType == 'b0') {// check if b0
-      if(!arbTrigger.betfair.l0.odds) {// check if betfair l0 not initialized
-        return arbTrigger.smarkets.b0 = {
-          odds: data.odds,
-          liquidity: data.liquidity
-        };
-      }
-      else {// check if arbs candidate exists
-        const
-          B0O = data.odds,
-          B0L = data.liquidity,
-          L0O = arbTrigger.betfair.l0.odds,
-          L0L = arbTrigger.betfair.l0.liquidity;
-        if(B0O > L0O) {// candidate exists
-          // create shallow copy of both betfairDeltas and smarketsDeltas
-          let
-            B = Object.assign({}, betfairDeltas),
-            S = Object.assign({}, smarketsDeltas);
-          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
-          // update the B.l0 to new values
-          B.l0 = {
-            odds: L0O,
-            liquidity: L0L
-          };
-          // update the S.b0 to new values
-          S.b0 = {
-            odds: B0O,
-            liquidity: B0L
-          };
+          console.log('B:..');
+          console.log(B);
+          console.log('S:..');
+          console.log(S);
           // derive target liquidity and win amount
           let targetLiquidity;
           if(B0L > L0L) {
@@ -579,7 +527,100 @@ function checkForArbs(exchange, data) {
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: £${WINAMT}`,
+            summary: `Bet ${SELECTION} on Smarkets for £${targetLiquidity} at ${B0O}, Lay on Betfair for £${targetLiquidity} at ${L0O}. Win Amount: £${WINAMT}`,
+            b: B,
+            s: S
+          };
+          // update in memory arbTrigger with new betfair.l0 values
+          arbTrigger.betfair.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          console.log('betfair l0.. arbTrigger');
+          console.log(arbTrigger);
+          console.log('arbsDoc...');
+          console.log(arbsDoc);
+          // save the arbDoc
+          return saveArbs(arbsDoc);
+        }
+        else {// candidate does NOT exist
+          if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            console.log('terminating inplay currentArb due to betfair l0...');
+            console.log(currentArb);
+            // update in memory arbTrigger with new smarkets.l0 values
+            arbTrigger.betfair.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            console.log('updated arbTrigger due to no arbs but inplay currentArb via betfair l0...');
+            console.log(arbTrigger);
+            // end in-play arbs
+            return endcurrentArb(data.timestamp);
+          }
+          else {// no currenArbs in play
+            // update in memory arbTrigger with new betfair.l0 values
+            arbTrigger.betfair.l0 = {
+              odds: data.odds,
+              liquidity: data.liquidity
+            };
+            console.log('updated arbTrigger due to no arbs n no inplay currentArb via betfair l0...');
+            return console.log(arbTrigger);
+          }
+        }
+      }
+    }
+  }
+  else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
+    if(data.betType == 'b0') {// check if b0
+      if(!arbTrigger.betfair.l0.odds) {// check if betfair l0 not initialized
+        arbTrigger.smarkets.b0 = {
+          odds: data.odds,
+          liquidity: data.liquidity
+        };
+        console.log('smarkets b0 seen - no betfair l0');
+        return console.log(arbTrigger);
+      }
+      else {// check if arbs candidate exists
+        const
+          B0O = data.odds,
+          B0L = data.liquidity,
+          L0O = arbTrigger.betfair.l0.odds,
+          L0L = arbTrigger.betfair.l0.liquidity;
+        if(B0O > L0O) {// candidate exists
+          console.log('candidate arb seen triggered by smarkets b0...');
+          // create shallow copy of both betfairDeltas and smarketsDeltas
+          let
+            B = Object.assign({}, betfairDeltas),
+            S = Object.assign({}, smarketsDeltas);
+          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
+          // update the B.l0 to new values
+          B.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // update the S.b0 to new values
+          S.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          console.log('B:..');
+          console.log(B);
+          console.log('S:..');
+          console.log(S);
+          // derive target liquidity and win amount
+          let targetLiquidity;
+          if(B0L > L0L) {
+            targetLiquidity = L0L;
+          }
+          else {
+            targetLiquidity = B0L;
+          }
+          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          // create arbsDoc object
+          const arbsDoc = {
+            selection: SELECTION,
+            timestampFrom: data.timestamp,
+            summary: `Bet ${SELECTION} on Smarkets for £${targetLiquidity} at ${B0O}, Lay on Betfair for £${targetLiquidity} at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -588,35 +629,47 @@ function checkForArbs(exchange, data) {
             odds: B0O,
             liquidity: B0L
           };
+          console.log('smarkets b0.. arbTrigger');
+          console.log(arbTrigger);
+          console.log('arbsDoc...');
+          console.log(arbsDoc);
           // save the arbDoc
           return saveArbs(arbsDoc);
         }
         else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
-            // update in memory arbTrigger with new smarkets.b0 values
+            console.log('terminating inplay currentArb due to smarkets b0...');
+            console.log(currentArb);
+            // update in memory arbTrigger with new smarkets.l0 values
             arbTrigger.smarkets.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs but inplay currentArb via smarkets b0...');
+            console.log(arbTrigger);
             // end in-play arbs
             return endcurrentArb(data.timestamp);
           }
           else {// no currenArbs in play
             // update in memory arbTrigger with new smarkets.b0 values
-            return arbTrigger.smarkets.b0 = {
+            arbTrigger.smarkets.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs n no inplay currentArb via smarkets b0...');
+            return console.log(arbTrigger);
           }
         }
       }
     }
     else if(data.betType == 'l0') {// check if l0
       if(!arbTrigger.betfair.b0.odds) {// check if oppossing cell not initialized
-        return arbTrigger.smarkets.l0 = {
+        arbTrigger.smarkets.l0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
+        console.log('smarkets l0 seen - no betfair b0');
+        return console.log(arbTrigger);
       }
       else {// check if arbs candidate exists
         const
@@ -625,6 +678,7 @@ function checkForArbs(exchange, data) {
           B0O = arbTrigger.betfair.b0.odds,
           B0L = arbTrigger.betfair.b0.liquidity;
         if(B0O > L0O) {// candidate exists
+          console.log('candidate arb seen triggered by smarkets l0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
             B = Object.assign({}, betfairDeltas),
@@ -640,6 +694,10 @@ function checkForArbs(exchange, data) {
             odds: L0O,
             liquidity: L0L
           };
+          console.log('B:..');
+          console.log(B);
+          console.log('S:..');
+          console.log(S);
           // derive target liquidity and win amount
           let targetLiquidity;
           if(B0L > L0L) {
@@ -653,7 +711,7 @@ function checkForArbs(exchange, data) {
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: £${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £${targetLiquidity} at ${B0O}, Lay on Smarkets for £${targetLiquidity} at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -662,25 +720,35 @@ function checkForArbs(exchange, data) {
             odds: L0O,
             liquidity: L0L
           };
+          console.log('smarkets l0.. arbTrigger');
+          console.log(arbTrigger);
+          console.log('arbsDoc...');
+          console.log(arbsDoc);
           // save the arbDoc
           return saveArbs(arbsDoc);
         }
         else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            console.log('terminating inplay currentArb due to smarkets l0...');
+            console.log(currentArb);
             // update in memory arbTrigger with new smarkets.l0 values
             arbTrigger.smarkets.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs but inplay currentArb via smarkets l0...');
+            console.log(arbTrigger);
             // end in-play arbs
             return endcurrentArb(data.timestamp);
           }
-          else {// no currenArbs in play
+          else {// no currentArbs in play
             // update in memory arbTrigger with new smarkets.l0 values
-            return arbTrigger.smarkets.l0 = {
+            arbTrigger.smarkets.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            console.log('updated arbTrigger due to no arbs n no inplay currentArb via smarkets l0...');
+            return console.log(arbTrigger);
           }
         }
       }
