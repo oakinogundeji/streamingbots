@@ -705,10 +705,10 @@ async function saveArbs(data) {
       end = new Date(data.timestampFrom);
     start = start.valueOf();
     end = end.valueOf();
-    const duration = end - start;
+    const duration = (end - start) / 1000;
     let endTime = new Date(data.timestampFrom);
     endTime = endTime.toISOString();
-    const newSummary = currentArb.summary + `. Duration: ${duration}.`;
+    const newSummary = currentArb.summary + `. Duration: ${duration} seconds.`;
     // update timestampTo of currenArbs
     const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
       'arbs.$.timestampTo': endTime,
@@ -755,10 +755,10 @@ async function endcurrentArb(timestamp) {
     end = new Date(timestamp);
   start = start.valueOf();
   end = end.valueOf();
-  const duration = end - start;
+  const duration = (end - start) / 1000;
   let endTime = new Date(timestamp);
   endTime = endTime.toISOString();
-  const newSummary = currentArb.summary + `. Duration: ${duration}.`;
+  const newSummary = currentArb.summary + `. Duration: ${duration} seconds.`;
   // update timestampTo of in-play currenArbs
   const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
     'arbs.$.timestampTo': endTime,
