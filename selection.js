@@ -431,7 +431,8 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          let WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          WINAMT = WINAMT * 0.98;
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
@@ -522,7 +523,8 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          let WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          WINAMT = WINAMT * 0.98;
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
@@ -615,7 +617,8 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          let WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          WINAMT = WINAMT * 0.98;
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
@@ -706,7 +709,8 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          let WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
+          WINAMT = WINAMT * 0.98;
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
