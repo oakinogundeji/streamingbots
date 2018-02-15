@@ -255,7 +255,7 @@ function spawnSmarketsBot() {
       console.log(dataObj);
       if((dataObj.betType == 'b0') || (dataObj.betType == 'l0')) {
         checkForArbs('smarkets', dataObj);
-      }      
+      }
       return saveData('smarkets', dataObj);
     } catch(err) {
       console.error(err);
@@ -388,36 +388,71 @@ function checkForArbs(exchange, data) {
   console.log(`checkForArbs invoked for ${exchange}`);
   if((exchange == 'betfair') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
     if(data.betType == 'b0') {// check if b0
-      if(!arbTrigger.smarkets.l0.odds) {// check if oppossing cell not initialized
+      if(!arbTrigger.smarkets.l0.odds) {// check if smarkets l0 odds not initialized
         return arbTrigger.betfair.b0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
-      } else {// check if arbs candidate exists
-        if(data.odds > arbTrigger.smarkets.l0.odds) {// candidate exists
+      }
+      else {// check if arbs candidate exists
+        const
+          B0O = data.odds,
+          B0L = data.liquidity,
+          L0O = arbTrigger.smarkets.l0.odds,
+          L0L = arbTrigger.smarkets.l0.liquidity;
+        if(B0O > L0O) {// candidate exists
+          // create shallow copy of both betfairDeltas and smarketsDeltas
+          let
+            B = Object.assign({}, betfairDeltas),
+            S = Object.assign({}, smarketsDeltas);
+          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
+          // update the B.b0 to new values
+          B.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // update the S.l0 to new values
+          S.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // derive target liquidity and win amount
           let targetLiquidity;
-          if(data.liquidity > arbTrigger.smarkets.l0.liquidity) {
-            targetLiquidity = arbTrigger.smarkets.l0.liquidity;
-          } else {
-            targetLiquidity = data.liquidity;
+          if(B0L > L0L) {
+            targetLiquidity = L0L;
           }
-          const WINAMT = targetLiquidity * (data.odds - arbTrigger.smarkets.l0.odds);
+          else {
+            targetLiquidity = B0L;
+          }
+          const WINAMT = targetLiquidity * (B0O - L0O);
+          // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${data.odds}, Lay on Smarkets for £2 at ${arbTrigger.smarkets.l0.odds}. Win Amount: ${WINAMT}`,
-            b: betfairDeltas,
-            s: smarketsDeltas
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            b: B,
+            s: S
           };
+          // update in memory arbTrigger with new betfair.b0 values
+          arbTrigger.betfair.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // save the arbDoc
           return saveArbs(arbsDoc);
-        } else {// candidate does NOT exist
+        }
+        else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            // update in memory arbTrigger with new betfair.b0 values
             arbTrigger.betfair.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            // end in-play arbs
             return endcurrentArb(data.timestamp);
-          } else {// no currenArbs in play
+          }
+          else {// no currenArbs in play
+            // update in memory arbTrigger with new betfair.b0 values
             return arbTrigger.betfair.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
@@ -425,37 +460,73 @@ function checkForArbs(exchange, data) {
           }
         }
       }
-    } else if(data.betType == 'l0') {// check if l0
-      if(!arbTrigger.smarkets.b0.odds) {// check if oppossing cell not initialized
+    }
+    else if(data.betType == 'l0') {// check if l0
+      if(!arbTrigger.smarkets.b0.odds) {// check if smarkets b0 not initialized
         return arbTrigger.betfair.l0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
-      } else {// check if arbs candidate exists
-        if(data.odds < arbTrigger.smarkets.b0.odds) {// candidate exists
+      }
+      else {// check if arbs candidate exists
+        const
+          L0O = data.odds,
+          L0L = data.liquidity,
+          B0O = arbTrigger.smarkets.b0.odds,
+          B0L = arbTrigger.smarkets.b0.liquidity;
+        if(L0O < B0O) {// candidate exists
+          // create shallow copy of both betfairDeltas and smarketsDeltas
+          let
+            B = Object.assign({}, betfairDeltas),
+            S = Object.assign({}, smarketsDeltas);
+          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
+          // update the B.l0 to new values
+          B.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // update the S.b0 to new values
+          S.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // derive target liquidity and win amount
           let targetLiquidity;
-          if(data.liquidity > arbTrigger.smarkets.b0.liquidity) {
-            targetLiquidity = arbTrigger.smarkets.b0.liquidity;
-          } else {
-            targetLiquidity = data.liquidity;
+          if(BOL > L0L) {
+            targetLiquidity = L0L;
           }
-          const WINAMT = targetLiquidity * (arbTrigger.smarkets.b0.odds - data.odds);
+          else {
+            targetLiquidity = B0L;
+          }
+          const WINAMT = targetLiquidity * (B0L - L0L);
+          // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${arbTrigger.smarkets.b0.odds}, Lay on Betfair for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
-            b: betfairDeltas,
-            s: smarketsDeltas
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            b: B,
+            s: S
           };
+          // update in memory arbTrigger with new betfair.l0 values
+          arbTrigger.betfair.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // save the arbDoc
           return saveArbs(arbsDoc);
-        } else {// candidate does NOT exist
+        }
+        else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            // update in memory arbTrigger with new betfair.l0 values
             arbTrigger.betfair.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            // end in-play arbs
             return endcurrentArb(data.timestamp);
-          } else {// no currenArbs in play
+          }
+          else {// no currenArbs in play
+            // update in memory arbTrigger with new betfair.l0 values
             return arbTrigger.betfair.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
@@ -464,38 +535,74 @@ function checkForArbs(exchange, data) {
         }
       }
     }
-  } else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
+  }
+  else if((exchange == 'smarkets') && ((data.betType == 'b0') || (data.betType == 'l0'))) {
     if(data.betType == 'b0') {// check if b0
-      if(!arbTrigger.betfair.l0.odds) {// check if oppossing cell not initialized
+      if(!arbTrigger.betfair.l0.odds) {// check if betfair l0 not initialized
         return arbTrigger.smarkets.b0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
-      } else {// check if arbs candidate exists
-        if(data.odds > arbTrigger.betfair.l0.odds) {// candidate exists
+      }
+      else {// check if arbs candidate exists
+        const
+          B0O = data.odds,
+          B0L = data.liquidity,
+          L0O = arbTrigger.betfair.l0.odds,
+          L0L = arbTrigger.betfair.l0.liquidity;
+        if(B0O > L0O) {// candidate exists
+          // create shallow copy of both betfairDeltas and smarketsDeltas
+          let
+            B = Object.assign({}, betfairDeltas),
+            S = Object.assign({}, smarketsDeltas);
+          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
+          // update the B.l0 to new values
+          B.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // update the S.b0 to new values
+          S.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // derive target liquidity and win amount
           let targetLiquidity;
-          if(data.liquidity > arbTrigger.betfair.l0.liquidity) {
-            targetLiquidity = arbTrigger.betfair.l0.liquidity;
-          } else {
-            targetLiquidity = data.liquidity;
+          if(B0L > L0L) {
+            targetLiquidity = L0L;
           }
-          const WINAMT = targetLiquidity * (data.odds - arbTrigger.betfair.l0.odds);
+          else {
+            targetLiquidity = B0L;
+          }
+          const WINAMT = targetLiquidity * (B0O - L0O);
+          // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${data.odds}, Lay on Betfair for £2 at ${arbTrigger.betfair.l0.odds}. Win Amount: ${WINAMT}`,
-            b: betfairDeltas,
-            s: smarketsDeltas
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            b: B,
+            s: S
           };
+          // update in memory arbTrigger with new smarkets.b0 values
+          arbTrigger.smarkets.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // save the arbDoc
           return saveArbs(arbsDoc);
-        } else {// candidate does NOT exist
+        }
+        else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            // update in memory arbTrigger with new smarkets.b0 values
             arbTrigger.smarkets.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            // end in-play arbs
             return endcurrentArb(data.timestamp);
-          } else {// no currenArbs in play
+          }
+          else {// no currenArbs in play
+            // update in memory arbTrigger with new smarkets.b0 values
             return arbTrigger.smarkets.b0 = {
               odds: data.odds,
               liquidity: data.liquidity
@@ -503,37 +610,73 @@ function checkForArbs(exchange, data) {
           }
         }
       }
-    } else if(data.betType == 'l0') {// check if l0
+    }
+    else if(data.betType == 'l0') {// check if l0
       if(!arbTrigger.betfair.b0.odds) {// check if oppossing cell not initialized
         return arbTrigger.smarkets.l0 = {
           odds: data.odds,
           liquidity: data.liquidity
         };
-      } else {// check if arbs candidate exists
-        if(data.odds < arbTrigger.betfair.b0.odds) {// candidate exists
+      }
+      else {// check if arbs candidate exists
+        const
+          L0O = data.odds,
+          L0L = data.liquidity,
+          B0O = arbTrigger.betfair.b0.odds,
+          B0L = arbTrigger.betfair.b0.liquidity;
+        if(B0O > L0O) {// candidate exists
+          // create shallow copy of both betfairDeltas and smarketsDeltas
+          let
+            B = Object.assign({}, betfairDeltas),
+            S = Object.assign({}, smarketsDeltas);
+          console.log('created shallow copies of betfairDeltas and smarketsDeltas...');
+          // update the B.b0 to new values
+          B.b0 = {
+            odds: B0O,
+            liquidity: B0L
+          };
+          // update the S.l0 to new values
+          S.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // derive target liquidity and win amount
           let targetLiquidity;
-          if(data.liquidity > arbTrigger.betfair.b0.liquidity) {
-            targetLiquidity = arbTrigger.betfair.b0.liquidity;
-          } else {
-            targetLiquidity = data.liquidity;
+          if(B0L > L0L) {
+            targetLiquidity = L0L;
           }
-          const WINAMT = targetLiquidity * (arbTrigger.betfair.b0.odds - data.odds);
+          else {
+            targetLiquidity = B0L;
+          }
+          const WINAMT = targetLiquidity * (B0O - L0O);
+          // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${arbTrigger.betfair.b0.odds}, Lay on Smarkets for £2 at ${data.odds}. Win Amount: ${WINAMT}`,
-            b: betfairDeltas,
-            s: smarketsDeltas
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            b: B,
+            s: S
           };
+          // update in memory arbTrigger with new smarkets.l0 values
+          arbTrigger.smarkets.l0 = {
+            odds: L0O,
+            liquidity: L0L
+          };
+          // save the arbDoc
           return saveArbs(arbsDoc);
-        } else {// candidate does NOT exist
+        }
+        else {// candidate does NOT exist
           if(!!currentArb && !currentArb.timestampTo) {// check if any arbs in play
+            // update in memory arbTrigger with new smarkets.l0 values
             arbTrigger.smarkets.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
             };
+            // end in-play arbs
             return endcurrentArb(data.timestamp);
-          } else {// no currenArbs in play
+          }
+          else {// no currenArbs in play
+            // update in memory arbTrigger with new smarkets.l0 values
             return arbTrigger.smarkets.l0 = {
               odds: data.odds,
               liquidity: data.liquidity
@@ -549,7 +692,19 @@ async function saveArbs(data) {
   if(!currentArb) {// check if first time arbs detected
     return saveData(data);
   } else {// set timestampTo of existing arbsDoc to timestampFrom of new arbs doc
-    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': data.timestampFrom}});
+    // setup
+    let
+      start = new Date(currentArb.timestampFrom),
+      end = new Date(timestamp);
+    start = start.valueOf();
+    end = end.valueOf();
+    const duration = end - start;
+    const newSummary = currentArb.summary + `. Duration: ${duration}.`;
+    // update timestampTo of currenArbs
+    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {
+      'arbs.$.timestampTo': timestamp,
+      'arbs.$.summary': newSummary
+    }});
     try {
       const updatedOldArbsDocData = await query.exec();
       console.log('updatedOldArbsDocData...');
@@ -582,8 +737,19 @@ async function saveArbs(data) {
 }
 
 async function endcurrentArb(timestamp) {
+  // setup
+  let
+    start = new Date(currentArb.timestampFrom),
+    end = new Date(timestamp);
+  start = start.valueOf();
+  end = end.valueOf();
+  const duration = end - start;
+  const newSummary = currentArb.summary + `. Duration: ${duration}.`;
   // update timestampTo of in-play currenArbs
-  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {'arbs.$.timestampTo': timestamp}});
+  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {
+    'arbs.$.timestampTo': timestamp,
+    'arbs.$.summary': newSummary
+  }});
   try {
     const updatedOldArbsDocData = await query.exec();
     console.log('updatedOldArbsDocData...');
