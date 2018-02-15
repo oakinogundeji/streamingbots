@@ -431,8 +431,10 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          const LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
+          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          WINAMT = Number(WINAMT.toFixed(2));
+          LOSEAMT = Number(LOSEAMT.toFixed(2));
 
           // create arbsDoc object
           const arbsDoc = {
@@ -524,8 +526,10 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          const LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
+          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          WINAMT = Number(WINAMT.toFixed(2));
+          LOSEAMT = Number(LOSEAMT.toFixed(2));
 
           // create arbsDoc object
           const arbsDoc = {
@@ -619,8 +623,10 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          const LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
+          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          WINAMT = Number(WINAMT.toFixed(2));
+          LOSEAMT = Number(LOSEAMT.toFixed(2));
 
           // create arbsDoc object
           const arbsDoc = {
@@ -712,8 +718,10 @@ async function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          const LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
+          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          WINAMT = Number(WINAMT.toFixed(2));
+          LOSEAMT = Number(LOSEAMT.toFixed(2));
 
           // create arbsDoc object
           const arbsDoc = {
