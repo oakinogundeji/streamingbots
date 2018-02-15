@@ -424,12 +424,12 @@ function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = targetLiquidity * (B0O - L0O);
+          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -498,12 +498,12 @@ function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = targetLiquidity * (B0L - L0L);
+          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -574,12 +574,12 @@ function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = targetLiquidity * (B0O - L0O);
+          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Smarkets for £2 at ${B0O}, Lay on Betfair for £2 at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
@@ -648,12 +648,12 @@ function checkForArbs(exchange, data) {
           else {
             targetLiquidity = B0L;
           }
-          const WINAMT = targetLiquidity * (B0O - L0O);
+          const WINAMT = (targetLiquidity * B0O) - (targetLiquidity * L0O);
           // create arbsDoc object
           const arbsDoc = {
             selection: SELECTION,
             timestampFrom: data.timestamp,
-            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: ${WINAMT}`,
+            summary: `Bet ${SELECTION} on Betfair for £2 at ${B0O}, Lay on Smarkets for £2 at ${L0O}. Win Amount: £${WINAMT}`,
             b: B,
             s: S
           };
