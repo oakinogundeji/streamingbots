@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/oakinogundeji/streamingbots#readme",
   "dependencies": {
+    "accounting": "^0.4.1",
     "bluebird": "^3.5.1",
     "dotenv": "^4.0.0",
     "moment": "^2.20.1",
