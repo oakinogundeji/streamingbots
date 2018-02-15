@@ -690,30 +690,41 @@ function checkForArbs(exchange, data) {
 
 async function saveArbs(data) {
   if(!currentArb) {// check if first time arbs detected
+    console.log('no currentArb... setting it to received data..');
+    currentArb = data;
+    console.log('currentArb...');
+    console.log(currentArb);
+    console.log('now saving new arbDoc...');
     return saveData(data);
-  } else {// set timestampTo of existing arbsDoc to timestampFrom of new arbs doc
+  }
+  else {// set timestampTo of existing arbsDoc to timestampFrom of new arbs doc
+    console.log('currentArb exists...');
     // setup
     let
       start = new Date(currentArb.timestampFrom),
-      end = new Date(timestamp);
+      end = new Date(data.timestampFrom);
     start = start.valueOf();
     end = end.valueOf();
     const duration = end - start;
+    let endTime = new Date(data.timestampFrom);
+    endTime = endTime.toISOString();
     const newSummary = currentArb.summary + `. Duration: ${duration}.`;
     // update timestampTo of currenArbs
-    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {
-      'arbs.$.timestampTo': timestamp,
+    const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
+      'arbs.$.timestampTo': endTime,
       'arbs.$.summary': newSummary
     }});
     try {
       const updatedOldArbsDocData = await query.exec();
       console.log('updatedOldArbsDocData...');
       console.log(updatedOldArbsDocData);
-    } catch(err) {
+    }
+    catch(err) {
       console.error('failed to update timestampTo field of existing arbsDoc...');
       const newErr = new Error(`failed to update timestampTo field of existing arbsDoc for ${SELECTION}`);
       return Promise.reject(newErr);
-    } finally {
+    }
+    finally {
       return saveData(data);
     }
   }
@@ -726,10 +737,11 @@ async function saveArbs(data) {
       const addedNewArbsDocData = await query.exec();
       console.log('addedNewArbsDocData...');
       console.log(addedNewArbsDocData);
-      currentArb = addedNewArbsDocData;
       return Promise.resolve(true);
-    } catch(err) {
+    }
+    catch(err) {
       console.error('failed to add new data to selectonArbsDoc...');
+      console.error(err);
       const newErr = new Error(`failed to add new data to selectonArbsDoc for ${SELECTION}`);
       return Promise.reject(newErr);
     }
@@ -744,10 +756,12 @@ async function endcurrentArb(timestamp) {
   start = start.valueOf();
   end = end.valueOf();
   const duration = end - start;
+  let endTime = new Date(timestamp);
+  endTime = endTime.toISOString();
   const newSummary = currentArb.summary + `. Duration: ${duration}.`;
   // update timestampTo of in-play currenArbs
-  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._id': currentArb._id}, { $set: {
-    'arbs.$.timestampTo': timestamp,
+  const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
+    'arbs.$.timestampTo': endTime,
     'arbs.$.summary': newSummary
   }});
   try {
@@ -760,8 +774,9 @@ async function endcurrentArb(timestamp) {
     return Promise.reject(newErr);
   } finally {// no arbs in play
     currentArb = null;
+    console.log('currentArb set to null...');
+    return console.log(currentArb);
   }
-
 }
 
 async function listenForCloseEvent(flag) {
