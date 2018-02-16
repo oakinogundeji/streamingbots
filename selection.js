@@ -471,7 +471,7 @@ async function checkForArbs(exchange, data) {
             console.log('updated arbTrigger due to no arbs but inplay currentArb via betfair b0...');
             console.log(arbTrigger);
             // end in-play arbs
-            return endcurrentArb(data.timestamp);
+            return endcurrentArb(data.timestampFrom);
           }
           else {// no currenArbs in play
             // update in memory arbTrigger with new betfair.b0 values
@@ -566,7 +566,7 @@ async function checkForArbs(exchange, data) {
             console.log('updated arbTrigger due to no arbs but inplay currentArb via betfair l0...');
             console.log(arbTrigger);
             // end in-play arbs
-            return endcurrentArb(data.timestamp);
+            return endcurrentArb(data.timestampFrom);
           }
           else {// no currenArbs in play
             // update in memory arbTrigger with new betfair.l0 values
@@ -663,7 +663,7 @@ async function checkForArbs(exchange, data) {
             console.log('updated arbTrigger due to no arbs but inplay currentArb via smarkets b0...');
             console.log(arbTrigger);
             // end in-play arbs
-            return endcurrentArb(data.timestamp);
+            return endcurrentArb(data.timestampFrom);
           }
           else {// no currenArbs in play
             // update in memory arbTrigger with new smarkets.b0 values
@@ -758,7 +758,7 @@ async function checkForArbs(exchange, data) {
             console.log('updated arbTrigger due to no arbs but inplay currentArb via smarkets l0...');
             console.log(arbTrigger);
             // end in-play arbs
-            return endcurrentArb(data.timestamp);
+            return endcurrentArb(data.timestampFrom);
           }
           else {// no currentArbs in play
             // update in memory arbTrigger with new smarkets.l0 values
