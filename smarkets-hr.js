@@ -21,7 +21,7 @@ const
   PWD_SELECTOR = '#login-form-password',
   SHOW_PWD_SELECTOR = '#login-page > div.form-page-content > form > div:nth-child(2) > div > div > span.after > button',
   SIGNIN_BTN_SELECTOR = '#login-page > div.form-page-content > form > button',
-  SELECTIONS_CONTAINER_SELECTOR = '#main-content > main > div > div:nth-child(3) > ul > li:nth-child(1)',
+  SELECTIONS_CONTAINER_SELECTOR = 'ul.contracts',
   MATCHED_AMOUNT_SELECTOR = 'div.contract-group-stats > span > span > span';
 
 
@@ -78,54 +78,54 @@ async function bot() {
           odds,
           liquidity;
         // check 12 conditions
-        if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+        if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b0';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b1';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b2';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l0';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l1';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-currency numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l2';
           liquidity = e.target.textContent;
-          odds = e.target.parentElement.parentElement.parentElement.children[0].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          odds = e.target.parentElement.parentElement.parentElement.children[0].children[1].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b0';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b1';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices offers') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'b2';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-0 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l0';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-1 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l1';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
-        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].textContent == SELECTION)) {
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
+        } else if((e.target.parentElement.parentElement.parentElement.parentElement.parentElement.className == 'prices bids') && (e.target.parentElement.parentElement.parentElement.parentElement.className == 'level-2 tick') && (e.target.parentElement.className == 'formatted-price numeric-value') && (e.target.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.children[0].children[0].children[1].children[0].innerText == SELECTION)) {
           betType = 'l2';
           odds = e.target.textContent;
-          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].textContent;
+          liquidity = e.target.parentElement.parentElement.parentElement.parentElement.children[1].children[0].innerText;
         }
         if(!!betType && !!odds && !!liquidity) {
           let timestamp = new Date();
