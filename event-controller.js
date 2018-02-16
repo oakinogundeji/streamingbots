@@ -32,6 +32,7 @@ async function getSelections() {
   } else {
     flag = 'GENERIC';
   }
+  console.log(`sport: ${sport}...`);
   // instantiate browser
   const browser = await P.launch({
     headless: false,
@@ -47,6 +48,7 @@ async function getSelections() {
     waitUntil: 'networkidle2',
     timeout: 180000
   });
+  await page.waitFor(10*1000);
   // ensure race container selector available
   await page.waitForSelector(SMARKETS_EVENTS_CONTAINER_SELECTOR);
   // allow 'page' instance to output any calls to browser log to node log
@@ -57,7 +59,7 @@ async function getSelections() {
     let selectionsList = [];
     if(flag == 'HR') {
       targets.filter(target => {
-        if(target.parentElement.nextElementSibling.children[0].className == 'price-section') {
+        if(target.parentElement.nextElementSibling.children[0].children[0].className == 'price-section') {
           const selection = target.children[1].children[0].innerText;
           console.log(`selection info for HR: ${selection}`);
           return selectionsList.push(selection);
