@@ -814,13 +814,13 @@ async function saveArbs(data) {
         .send({
           "transport": "ses",
           "from": "noreply@valueservices.uk",
-          "to": "oakinogundeji@gmail.com",
+          "to": EMAIL,
           "subject": EVENT_LABEL,
           "emailbody": summary,
           "templateName": "GenericEmail"
         })
         .then(resp => {
-          console.log('msg sending resp.statusCode...');
+          console.log('msg sending response...');
           return console.log(resp.statusCode);
         });
     }
@@ -848,13 +848,13 @@ async function saveArbs(data) {
         .send({
           "transport": "ses",
           "from": "noreply@valueservices.uk",
-          "to": "oakinogundeji@gmail.com",
+          "to": EMAIL,
           "subject": EVENT_LABEL,
           "emailbody": data.summary,
           "templateName": "GenericEmail"
         })
         .then(resp => {
-          console.log('msg sending resp.statusCode...');
+          console.log('msg sending response...');
           return console.log(resp.statusCode);
         });
       return Promise.resolve(true);
@@ -896,13 +896,13 @@ async function endcurrentArb(timestamp) {
       .send({
         "transport": "ses",
         "from": "noreply@valueservices.uk",
-        "to": "oakinogundeji@gmail.com",
+        "to": EMAIL,
         "subject": EVENT_LABEL,
         "emailbody": summary,
         "templateName": "GenericEmail"
       })
       .then(resp => {
-        console.log('msg sending resp.statusCode...');
+        console.log('msg sending response...');
         return console.log(resp.statusCode);
       });
   }
