@@ -9,6 +9,7 @@ const
   Promise = require('bluebird'),
   accounting = require('accounting'),
   mongoose = require('mongoose'),
+  request = require('superagent'),
   SelectionDocModel = require('./models/selection-docs'),
   SelectionArbsDocModel = require('./models/selection-arbs-docs'),
   SELECTION = process.argv[2],
@@ -800,11 +801,28 @@ async function saveArbs(data) {
     const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
       'arbs.$.timestampTo': endTime,
       'arbs.$.summary': newSummary
-    }});
+    }}, {new: true});
     try {
       const updatedOldArbsDocData = await query.exec();
       console.log('updatedOldArbsDocData...');
       console.log(updatedOldArbsDocData);
+      const summary = updatedOldArbsDocData.summary;
+      console.log(`summary to email: ${summary}`);
+      request
+        .post(ENDPOINT)
+        .set('Accept', 'application/json')
+        .send({
+          "transport": "ses",
+          "from": "noreply@valueservices.uk",
+          "to": "oakinogundeji@gmail.com",
+          "subject": EVENT_LABEL,
+          "emailbody": summary,
+          "templateName": "GenericEmail"
+        })
+        .then(resp => {
+          console.log('msg sending resp.statusCode...');
+          return console.log(resp.statusCode);
+        });
     }
     catch(err) {
       console.error('failed to update timestampTo field of existing arbsDoc...');
@@ -824,6 +842,21 @@ async function saveArbs(data) {
       const addedNewArbsDocData = await query.exec();
       console.log('addedNewArbsDocData...');
       console.log(addedNewArbsDocData);
+      request
+        .post(ENDPOINT)
+        .set('Accept', 'application/json')
+        .send({
+          "transport": "ses",
+          "from": "noreply@valueservices.uk",
+          "to": "oakinogundeji@gmail.com",
+          "subject": EVENT_LABEL,
+          "emailbody": data.summary,
+          "templateName": "GenericEmail"
+        })
+        .then(resp => {
+          console.log('msg sending resp.statusCode...');
+          return console.log(resp.statusCode);
+        });
       return Promise.resolve(true);
     }
     catch(err) {
@@ -850,11 +883,28 @@ async function endcurrentArb(timestamp) {
   const query = SelectionArbsDocModel.findOneAndUpdate({eventLabel: EVENT_LABEL, selection: SELECTION, 'arbs._timestampFrom': currentArb._timestampFrom}, { $set: {
     'arbs.$.timestampTo': endTime,
     'arbs.$.summary': newSummary
-  }});
+  }}, {new: true});
   try {
     const updatedOldArbsDocData = await query.exec();
     console.log('updatedOldArbsDocData...');
     console.log(updatedOldArbsDocData);
+    const summary = updatedOldArbsDocData.summary;
+    console.log(`summary to email: ${summary}`);
+    request
+      .post(ENDPOINT)
+      .set('Accept', 'application/json')
+      .send({
+        "transport": "ses",
+        "from": "noreply@valueservices.uk",
+        "to": "oakinogundeji@gmail.com",
+        "subject": EVENT_LABEL,
+        "emailbody": summary,
+        "templateName": "GenericEmail"
+      })
+      .then(resp => {
+        console.log('msg sending resp.statusCode...');
+        return console.log(resp.statusCode);
+      });
   }
   catch(err) {
     console.error('failed to update timestampTo field of existing arbsDoc...');
