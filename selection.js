@@ -403,7 +403,7 @@ async function checkForArbs(exchange, data) {
           B0L = data.liquidity,
           L0O = arbTrigger.smarkets.l0.odds,
           L0L = arbTrigger.smarkets.l0.liquidity;
-        if(B0O > L0O) {// candidate exists
+        if((B0O > L0O) && ((B0O / L0O) > 1.02)) {// candidate exists
           console.log('candidate arb seen triggered by betfair b0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
@@ -433,7 +433,7 @@ async function checkForArbs(exchange, data) {
             targetLiquidity = B0L;
           }
           let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let LOSEAMT = ((targetLiquidity * 0.98) - (targetLiquidity)) * (-1);
           //WINAMT = Number(WINAMT.toFixed(2));
           WINAMT = accounting.formatMoney(Number(WINAMT.toFixed(2)), "£ ");
           //LOSEAMT = Number(LOSEAMT.toFixed(2));
@@ -500,7 +500,7 @@ async function checkForArbs(exchange, data) {
           L0L = data.liquidity,
           B0O = arbTrigger.smarkets.b0.odds,
           B0L = arbTrigger.smarkets.b0.liquidity;
-        if(L0O < B0O) {// candidate exists
+        if((B0O > L0O) && ((B0O / L0O) > 1.02)) {// candidate exists
           console.log('candidate arb seen triggered by betfair l0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
@@ -530,7 +530,7 @@ async function checkForArbs(exchange, data) {
             targetLiquidity = B0L;
           }
           let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let LOSEAMT = ((targetLiquidity * 0.98) - (targetLiquidity)) * (-1);
           WINAMT = accounting.formatMoney(Number(WINAMT.toFixed(2)), "£ ");
           LOSEAMT = accounting.formatMoney(Number(LOSEAMT.toFixed(2)), "£ ");
 
@@ -597,7 +597,7 @@ async function checkForArbs(exchange, data) {
           B0L = data.liquidity,
           L0O = arbTrigger.betfair.l0.odds,
           L0L = arbTrigger.betfair.l0.liquidity;
-        if(B0O > L0O) {// candidate exists
+        if((B0O > L0O) && ((B0O / L0O) > 1.02)) {// candidate exists
           console.log('candidate arb seen triggered by smarkets b0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
@@ -627,7 +627,7 @@ async function checkForArbs(exchange, data) {
             targetLiquidity = B0L;
           }
           let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let LOSEAMT = ((targetLiquidity * 0.98) - (targetLiquidity)) * (-1);
           WINAMT = accounting.formatMoney(Number(WINAMT.toFixed(2)), "£ ");
           LOSEAMT = accounting.formatMoney(Number(LOSEAMT.toFixed(2)), "£ ");
 
@@ -692,7 +692,7 @@ async function checkForArbs(exchange, data) {
           L0L = data.liquidity,
           B0O = arbTrigger.betfair.b0.odds,
           B0L = arbTrigger.betfair.b0.liquidity;
-        if(B0O > L0O) {// candidate exists
+        if((B0O > L0O) && ((B0O / L0O) > 1.02)) {// candidate exists
           console.log('candidate arb seen triggered by smarkets l0...');
           // create shallow copy of both betfairDeltas and smarketsDeltas
           let
@@ -722,7 +722,7 @@ async function checkForArbs(exchange, data) {
             targetLiquidity = B0L;
           }
           let WINAMT = (targetLiquidity * B0O * 0.98) - (targetLiquidity * L0O);
-          let LOSEAMT = ((targetLiquidity * L0O * 0.98) - (targetLiquidity * B0O)) * (-1);
+          let LOSEAMT = ((targetLiquidity * 0.98) - (targetLiquidity)) * (-1);
           WINAMT = accounting.formatMoney(Number(WINAMT.toFixed(2)), "£ ");
           LOSEAMT = accounting.formatMoney(Number(LOSEAMT.toFixed(2)), "£ ");
 
