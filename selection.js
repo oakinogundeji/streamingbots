@@ -855,11 +855,13 @@ async function endcurrentArb(timestamp) {
     const updatedOldArbsDocData = await query.exec();
     console.log('updatedOldArbsDocData...');
     console.log(updatedOldArbsDocData);
-  } catch(err) {
+  }
+  catch(err) {
     console.error('failed to update timestampTo field of existing arbsDoc...');
     const newErr = new Error(`failed to update timestampTo field of existing arbsDoc for ${SELECTION}`);
     return Promise.reject(newErr);
-  } finally {// no arbs in play
+  }
+  finally {// no arbs in play
     currentArb = null;
     console.log('currentArb set to null...');
     return console.log(currentArb);
