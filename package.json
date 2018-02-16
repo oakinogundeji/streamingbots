@@ -17,6 +17,13 @@
   },
   "homepage": "https://github.com/oakinogundeji/streamingbots#readme",
   "dependencies": {
-    "puppeteer": "^1.0.0"
+    "accounting": "^0.4.1",
+    "bluebird": "^3.5.1",
+    "dotenv": "^4.0.0",
+    "moment": "^2.20.1",
+    "mongodb": "^3.0.1",
+    "mongoose": "^5.0.4",
+    "puppeteer": "^1.0.0",
+    "superagent": "^3.8.2"
   }
 }
